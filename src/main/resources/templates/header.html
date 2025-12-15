@@ -1,0 +1,40 @@
+<!-- templates/header.html -->
+
+<!-- ========================= HEADER FRAGMENT ========================= -->
+<!-- This fragment can be included in other pages using Thymeleaf's th:replace or th:include -->
+<div xmlns:th="http://www.thymeleaf.org"
+     th:fragment="pageHeader(selectedPg, showBackToCandidates)">
+
+    <!-- Container for header with flex layout -->
+    <div class="d-flex justify-content-between align-items-center mb-3 w-100">
+
+        <!-- LEFT SIDE: empty placeholder for alignment, page <h3> usually handled separately -->
+        <div></div>
+
+        <!-- RIGHT SIDE: Buttons aligned horizontally -->
+        <div class="d-flex align-items-center ml-auto">
+
+            <!-- Back to PG List button (always visible) -->
+            <a href="/pgs/list" class="btn btn-outline-primary btn-sm mx-1">
+                <i class="fas fa-arrow-left"></i> Back to PGs
+            </a>
+
+            <!-- Back to Candidate List button (conditionally displayed) -->
+            <!-- Visible only if showBackToCandidates is true -->
+            <a th:if="${showBackToCandidates}"
+               th:href="@{/candidates/list(pgId=${selectedPg != null ? selectedPg.id : null})}"
+               class="btn btn-outline-primary btn-sm mx-1">
+                <i class="fas fa-arrow-left"></i> Back to Candidate List
+            </a>
+
+            <!-- Logout form -->
+            <!-- Sends GET request to /logout and shows logout button -->
+            <form th:action="@{/logout}" method="get" style="margin:0;">
+                <button type="submit" class="btn btn-outline-danger btn-sm mx-1">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Payment History</title>
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+	<style>
+		/* ===================== BASE STYLES ===================== */
+		/* Page baseline */
+		body {
+			background: #e6f7f9;
+			font-family: 'Calibri', Verdana, Helvetica, Arial, sans-serif;
+			padding: 2px;
+			/* reduced from 25px */
+			margin: 0;
+
+			/* remove default margin */
+			overflow-x: hidden;
+		}
+
+		h3 {
+			font-weight: 600;
+			color: #343a40;
+		}
+
+		.container {
+			background: #fff;
+			border-radius: 12px;
+			padding: 12px;
+			/* reduced top/bottom/left/right padding */
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+			max-width: 100%;
+			margin: 0;
+			/* remove left/right margin */
+
+		}
+
+		/* White rounded container like View Candidates */
+		.table-container {
+			margin: 2px 0;
+			/* reduce top/bottom margin */
+			border-radius: 12px;
+			background-color: #fff;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+			width: 100%;
+			overflow-x: auto;
+
+		}
+
+		/* Table cells vertical alignment */
+		.table td,
+		.table th {
+			vertical-align: middle;
+
+		}
+
+		/* Center small selects and inputs inside table */
+		.table td select.form-control-sm,
+		.table td input.form-control-sm {
+			width: 100%;
+			max-width: 120px;
+			margin: 0 auto;
+			text-align: center;
+			padding: 2px 6px;
+			font-size: 0.875rem;
+
+		}
+
+
+
+		table {
+			border-radius: 10px;
+			overflow: hidden;
+			width: 100%;
+
+		}
+
+		thead th {
+			background-color: #007b7b;
+			color: white;
+			text-transform: uppercase;
+			font-size: 0.85rem;
+			letter-spacing: 0.5px;
+			vertical-align: middle;
+		}
+
+		td,
+		th {
+			vertical-align: middle !important;
+			font-size: 0.9rem;
+			padding: 10px;
+		}
+
+		/* Row colors */
+		.row-paid {
+			background-color: #c8e6c9 !important;
+		}
+
+		.row-pending {
+			background-color: #f8bcbc !important;
+		}
+
+		.row-partial {
+			background-color: #fff3cd !important;
+			/* soft yellow */
+		}
+
+		/* ===================== BUTTONS ===================== */
+
+		.btn-icon {
+			padding: 6px 10px;
+			font-size: 0.85rem;
+			border-radius: 6px;
+			box-shadow: none;
+		}
+
+		.btn-photo,
+		.btn-idproof {
+			background-color: #00b894;
+			color: white;
+			border: none;
+		}
+
+		.btn-edit {
+			background-color: #007bff;
+			color: white;
+			border: none;
+		}
+
+		.btn-delete {
+			background-color: #e74c3c;
+			color: white;
+			border: none;
+		}
+
+		.btn-search {
+			background-color: #28a745;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			padding: 6px 16px;
+		}
+
+		.btn-search:hover {
+			background-color: #218838;
+		}
+
+		.btn-reset {
+			background-color: #dc3545;
+			color: white;
+			border: none;
+			border-radius: 6px;
+			padding: 6px 16px;
+			text-decoration: none !important;
+		}
+
+		.btn-reset:hover,
+		.btn-reset:focus {
+			background-color: #c82333;
+			/* keep red on hover */
+			color: white;
+			text-decoration: none !important;
+			outline: none !important;
+		}
+
+
+		/* ===================== FORM INPUTS =====================  */
+
+		.payment-update-form select,
+		.payment-update-form input[type="date"] {
+			height: 32px;
+			font-size: 0.85rem;
+		}
+
+		.payment-update-form .btn-update {
+			height: 32px;
+			padding: 6px 10px;
+		}
+
+		/* Prevent form controls from shrinking */
+		.search-bar-row .form-control {
+			border-radius: 6px;
+			border: 1px solid #ccc;
+			height: 38px;
+			min-width: 110px;
+			flex-shrink: 0;
+
+		}
+
+		/* PG dropdown: wider for long names */
+		.search-bar-row select[name="pgId"] {
+			min-width: 220px;
+			max-width: 300px;
+		}
+
+		/* Month & Year dropdowns: smaller */
+		.search-bar-row select {
+			width: auto !important;
+			min-width: fit-content !important;
+			max-width: fit-content !important;
+			display: inline-block;
+			padding-right: 25px;
+			/* space for dropdown arrow */
+		}
+
+		/* Room number input */
+		.search-bar-row input[name="roomNo"] {
+			width: 120px;
+
+		}
+
+		/* ===================== SUMMARY BOX ===================== */
+
+		.summary-inline {
+			padding: 10px 15px;
+			background: #fff;
+			border-radius: 8px;
+			box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+			font-weight: 600;
+			white-space: nowrap;
+			flex-shrink: 0;
+			margin-left: auto;
+		}
+
+		.summary-inline .divider {
+			margin: 0 8px;
+			color: #777;
+		}
+
+		.paid-text {
+			color: #28a745;
+			font-weight: 700;
+		}
+
+		.pending-text {
+			color: #dc3545;
+			font-weight: 700;
+		}
+
+		/* Single-line summary box (centered) */
+		.summary-single {
+			background: #ffffff;
+			padding: 12px 18px;
+			border-radius: 10px;
+			box-shadow: 0 0 8px rgba(0, 0, 0, 0.08);
+			font-size: 0.95rem;
+			font-weight: 600;
+			display: block;
+			width: 100%;
+			text-align: center;
+			margin-bottom: 20px;
+		}
+
+		.summary-single .divider {
+			margin: 0 10px;
+			color: #666;
+		}
+
+		/* ===================== TOP ROW & SEARCH BAR ===================== */
+
+		/* Top row: search form left, summary box right */
+		.top-row {
+			display: flex;
+			justify-content: space-between;
+			/* form left, summary right */
+			align-items: center;
+			width: 100%;
+			gap: 20px;
+			flex-wrap: wrap;
+			/* wrap on small screens */
+			box-sizing: border-box;
+		}
+
+		/* Search bar row */
+		.search-bar-row {
+			display: flex;
+			align-items: center;
+			gap: 2px;
+			flex-wrap: wrap;
+			/* allow wrapping on small screens */
+			background-color: #dff6fa;
+			padding: 12px 18px;
+			border-radius: 10px;
+			flex: 1;
+			/* take all available left space */
+			min-width: 10px;
+			/* allow shrinking on small screens */
+			margin-bottom: 11px;
+		}
+
+		/* Labels inside search bar */
+		.search-bar-row label {
+			white-space: nowrap;
+			padding-top: 8px;
+			font-weight: 600;
+			flex-shrink: 0;
+		}
+
+		/* Buttons fixed width */
+		.search-bar-row .btn-search,
+		.search-bar-row .btn- {
+			flex-shrink: 0;
+		}
+
+		/* ===================== MODALS ===================== */
+
+		.modal-success,
+		#paymentErrorModal {
+			display: none;
+			position: fixed;
+			z-index: 9999;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.5);
+		}
+
+		.modal-content-success {
+			background: white;
+			padding: 20px;
+			width: 360px;
+			margin: 12% auto;
+			border-radius: 8px;
+			text-align: center;
+		}
+
+		.modal-content-error {
+			background: #ffe6e6;
+			border-left: 6px solid #dc3545;
+			padding: 20px;
+			width: 360px;
+			margin: 12% auto;
+			border-radius: 8px;
+			text-align: center;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+		}
+
+		.success-btn {
+			background: #28a745;
+			color: white;
+			padding: 8px 18px;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+
+		/* ===================== RESPONSIVE ===================== */
+		@media (max-width: 900px) {
+
+			td,
+			th {
+				font-size: 0.82rem;
+				padding: 8px;
+			}
+
+			.form-inline .form-control {
+				min-width: 80px;
+				margin-bottom: 6px;
+			}
+		}
+
+		.summary-wrapper {
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		/* Top summary: counts, aligned right */
+		.summary-bar.top-summary {
+			display: flex;
+			justify-content: flex-end;
+			/* Align to right */
+			gap: 15px;
+		}
+
+		/* Bottom summary: amounts, left-aligned */
+		.summary-bar.bottom-summary {
+			display: flex;
+			justify-content: flex-start;
+			/* Align to left */
+			gap: 15px;
+		}
+
+		/* Individual item styling */
+		/* Individual item styling */
+		.summary-item {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			font-size: 14px;
+			font-weight: 700;
+			/* bold text */
+			padding: 5px 10px;
+			border-radius: 6px;
+			background: #f7f7f7;
+			transition: transform 0.2s;
+		}
+
+
+		.summary-item i {
+			font-size: 16px;
+		}
+
+		.summary-item.paid {
+			color: green;
+		}
+
+		.summary-item.partial {
+			color: orange;
+		}
+
+		.summary-item.pending {
+			color: red;
+		}
+
+		.summary-item.advance {
+			color: #007bff;
+		}
+
+		.summary-item.collection {
+			color: #28a745;
+		}
+
+		.summary-item.balance {
+			color: #dc3545;
+		}
+
+		.summary-item:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+		}
+
+		/* Responsive: stack vertically on small screens */
+		@media (max-width: 768px) {
+
+			.summary-bar.top-summary,
+			.summary-bar.bottom-summary {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+		}
+
+		/* White box */
+		.summary-bar {
+			background-color: #ffffff;
+			border-radius: 10px;
+			box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+			font-weight: 600;
+		}
+
+		/* Main row: split left & right */
+		/* Main row: split left & right */
+		.single-line-summary {
+			display: flex;
+			justify-content: space-between;
+			/* LEFT & RIGHT separation */
+			align-items: center;
+			width: 100%;
+			padding: 10px 10ppx;
+
+			/* Desktop spacing hack */
+			column-gap: 10px;
+
+			/* Mobile support */
+			flex-wrap: wrap;
+		}
+
+		/* Left = items grouped */
+		.summary-left {
+			display: flex;
+			gap: 20px;
+			flex-wrap: wrap;
+		}
+
+		/* Right = items grouped (WILL MOVE RIGHT NOW) */
+		.summary-right {
+			margin-left: auto;
+			/* ⬅️ THIS pushes right side fully right */
+			display: flex;
+			gap: 20px;
+			flex-wrap: wrap;
+		}
+
+		.summary-item {
+			font-size: 14px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		/* in your CSS file */
+		.logout-btn {
+			margin-left: 11px;
+			/* your preferred spacing */
+		}
+
+		/* ============================
+   DESKTOP VIEW (unchanged)
+   ============================ */
+		.summary-bar {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.summary-left,
+		.summary-right {
+			display: flex;
+			gap: 10px;
+		}
+
+		.summary-item {
+			background: #fff;
+			padding: 6px 12px;
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 14px;
+			white-space: nowrap;
+		}
+
+		.summary-item i {
+			font-size: 16px;
+		}
+
+
+		/* ============================
+   📱 MOBILE VIEW (improved)
+   ============================ */
+		@media (max-width: 600px) {
+
+			/* 2 items per row grid */
+			.summary-bar {
+				display: grid;
+				grid-template-columns: repeat(2, 1fr);
+				gap: 8px;
+				padding: 5px;
+			}
+
+			/* Flatten left/right groups so all items join grid */
+			.summary-left,
+			.summary-right {
+				display: contents !important;
+			}
+
+			/* Smaller, compact card style */
+			.summary-item {
+				padding: 4px 10px;
+				font-size: 13px;
+				border-radius: 6px;
+			}
+
+			/* Smaller icons */
+			.summary-item i {
+				font-size: 14px;
+			}
+		}
+
+		.summary-inline {
+			font-size: 14px;
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 0;
+			/* remove extra space between items */
+		}
+
+		.summary-inline,
+		.summary-inline span,
+		.summary-inline span span {
+			font-weight: 700 !important;
+			/* force bold */
+		}
+
+		.summary-inline .summary-item {
+			display: flex;
+			align-items: center;
+			gap: 0;
+			/* no space between icon and text */
+			font-weight: 500;
+		}
+
+		.summary-inline .summary-item i {
+			margin-right: 0;
+			/* remove any default margin */
+		}
+
+		/* Colors for icons */
+		.summary-inline .total i {
+			color: #007bff;
+		}
+
+		.summary-inline .paid i {
+			color: #28a745;
+		}
+
+		.summary-inline .partial i {
+			color: #ffc107;
+		}
+
+		.summary-inline .pending i {
+			color: #fd7e14;
+		}
+
+		.summary-inline .advance i {
+			color: #17a2b8;
+		}
+
+		.summary-inline .collection i {
+			color: #6f42c1;
+		}
+
+		.summary-inline .balance i {
+			color: #dc3545;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container mt-4">
+		<div class="" page-wrapper"">
+			<!-- Header -->
+			<div class="d-flex justify-content-between align-items-center mb-3">
+				<h3>
+					Payment History
+					<span th:if="${selectedPg != null}" th:text="' - ' + ${selectedPg.pgName}"
+						class="text-primary font-weight-bold">
+					</span>
+				</h3>
+				<th:block th:replace="header :: pageHeader(${selectedPg}, ${true})"></th:block>
+			</div>
+
+			<!-- Search form -->
+			<div class="top-row">
+				<form th:action="@{/payments/history}" method="get" class="search-bar-row">
+					<label>PG:</label>
+					<select name="pgId" class="form-control" style="
+    width: 226.22222px;
+">
+						<option th:each="pg : ${pgs}" th:value="${pg.id}" th:text="${pg.pgName}"
+							th:selected="${selectedPg != null and pg.id == selectedPg.id}"></option>
+					</select>
+
+					<label>Month:</label>
+					<select name="month" class="form-control">
+						<option th:each="m : ${months}" th:value="${m}" th:text="${m}"
+							th:selected="${m == selectedMonth}">
+						</option>
+					</select>
+
+					<label>Year:</label>
+					<select name="year" class="form-control">
+						<option th:each="y : ${years}" th:value="${y}" th:text="${y}"
+							th:selected="${y == selectedYear}">
+						</option>
+					</select>
+
+					<label>Room No:</label>
+					<input type="text" name="roomNo" maxlength="3" pattern="\d{1,3}"
+						oninput="this.value = this.value.replace(/[^0-9]/g,'')" class="form-control"
+						placeholder="Room No" style="width: 80px;" th:value="${roomNo}">
+
+
+
+					<button class="btn-search" onclick="filterRoom()">Search</button>
+					<a th:href="@{/payments/history(pgId=${selectedPg != null ? selectedPg.id : null})}"
+						class="btn-reset" style="margin-right:72px;">
+						Reset
+					</a>
+					<div class="summary-wrapper">
+
+						<div class="summary-bar single-line-summary">
+
+							<div class="summary-inline">
+								<span class="summary-item total"><i class="fas fa-users"></i>Total:<span
+										th:text="${totalCandidates}">0</span></span>|
+								<span class="summary-item paid"><i class="fas fa-check-circle"></i>Paid:<span
+										th:text="${paidCandidates}">0</span></span>|
+								<span class="summary-item partial"><i class="fas fa-adjust"></i>Partial:<span
+										th:text="${partialCandidates}">0</span></span>|
+								<span class="summary-item pending"><i class="fas fa-hourglass-half"></i>Pending:<span
+										th:text="${pendingCandidates}">0</span></span>&nbsp;&nbsp;
+								<span class="summary-item advance"><i class="fas fa-hand-holding-usd"></i>Advance:₹<span
+										th:text="${totalAdvanceAmount}">0</span></span>|
+								<span class="summary-item collection"><i class="fas fa-coins"></i>Collection:₹<span
+										th:text="${totalPaidAmount}">0</span></span>|
+								<span class="summary-item balance"><i class="fas fa-wallet"></i>Balance:₹<span
+										th:text="${totalBalanceAmount}">0</span></span>
+							</div>
+
+
+						</div>
+					</div>
+
+				</form>
+			</div>
+
+
+
+			<!-- Payment Table in white rounded container -->
+			<div class="table-container">
+				<table class="table table-bordered table-hover mb-0">
+					<thead>
+						<tr>
+							<th>Candidate Name</th>
+							<th>Room Nos</th>
+							<th class="text-center">Method</th>
+							<th class="text-center">Advance</th>
+							<th class="text-center">Amount Paid</th>
+							<th class="text-center">Balance</th>
+							<th class="text-center">Txn ID</th>
+							<th class="text-center">Receipt ID</th>
+							<th class="text-center">Payment Date</th>
+							<th class="text-center">Status</th>
+							<th class="text-center">Update</th>
+							<th class="text-center">Email Receipt</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						<tr th:each="candidate : ${candidates}" th:class="${paymentMap[candidate.candidateId] != null
+               ? (paymentMap[candidate.candidateId].status.name() == T(com.pgapp.model.PaymentStatus).PAID.name() ? 'row-paid'
+                  : (paymentMap[candidate.candidateId].status.name() == T(com.pgapp.model.PaymentStatus).PARTIAL_PAID.name() ? 'row-partial' : 'row-pending'))
+               : 'row-pending'}">
+
+
+							<td th:text="${candidate.name}">Candidate Name</td>
+							<td th:text="${candidate.roomNo}">Room No</td>
+							<!-- ADDED hidden monthly rent -->
+							<input type="hidden" class="visible-monthlyRent"
+								th:value="${candidate.pg != null ? candidate.pg.monthlyRent : 0}" />
+
+							<!-- Method -->
+							<td class="text-center">
+								<select class="form-control form-control-sm visible-method">
+									<option th:each="m : ${T(com.pgapp.model.PaymentMethod).values()}" th:value="${m}"
+										th:text="${m}" th:selected="${paymentMap[candidate.candidateId] != null
+                                  && paymentMap[candidate.candidateId].paymentMethod.name() == m.name()}">
+									</option>
+								</select>
+							</td>
+
+							<!-- Advance -->
+							<td class="text-center">
+								<input type="text" class="form-control form-control-sm visible-advance"
+									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].advance : ''}" />
+							</td>
+
+							<!-- Amount Paid -->
+							<td class="text-center">
+								<input type="text" class="form-control form-control-sm visible-amountPaid"
+									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].amountPaid : ''}" />
+							</td>
+
+							<!-- Balance -->
+							<td class="text-center">
+								<input type="text" class="form-control form-control-sm visible-balance"
+									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].balance :''}" />
+							</td>
+
+							<!-- Transaction ID -->
+							<td class="text-center">
+								<input type="text" class="form-control form-control-sm visible-txn"
+									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].transactionId : ''}" />
+							</td>
+
+							<!-- Receipt ID -->
+							<td class="text-center">
+								<input type="text" class="form-control form-control-sm visible-receipt"
+									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].receiptId : ''}" />
+							</td>
+
+							<!-- Payment Date -->
+							<td class="text-center">
+								<input type="date" class="form-control form-control-sm visible-date" th:value="${paymentMap[candidate.candidateId]?.paymentDate != null 
+                     ? #temporals.format(paymentMap[candidate.candidateId].paymentDate, 'yyyy-MM-dd') 
+                     : #temporals.format(defaultDate, 'yyyy-MM-dd')}"
+									th:attr="max=${#temporals.format(defaultDate, 'yyyy-MM-dd')}" />
+							</td>
+
+
+							<!-- Status -->
+							<!-- Status -->
+							<td class="text-center">
+								<select name="status" class="visible-status form-control form-control-sm">
+									<option th:each="s : ${T(com.pgapp.model.PaymentStatus).values()}" th:value="${s}"
+										th:text="${s}" th:selected="${paymentMap[candidate.candidateId] != null
+                            && paymentMap[candidate.candidateId].status.name() == s.name()}">
+									</option>
+								</select>
+							</td>
+
+
+
+							<!-- Update Button -->
+							<td class="text-center">
+								<form th:action="@{/payments/update}" method="post" class="payment-update-form"
+									style="display:inline-flex; gap:6px; align-items:center;">
+									<input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
+									<input type="hidden" name="pgId" th:value="${selectedPg.id}" />
+									<input type="hidden" name="month" th:value="${selectedMonth}" />
+									<input type="hidden" name="year" th:value="${selectedYear}" />
+
+									<!-- Hidden inputs to hold updated values -->
+									<input type="hidden" name="method" />
+									<input type="hidden" name="status" />
+									<input type="hidden" name="paymentDate" />
+									<input type="hidden" name="advance" />
+									<input type="hidden" name="amountPaid" />
+									<input type="hidden" name="balance" />
+									<input type="hidden" name="transactionId" />
+									<input type="hidden" name="receiptId" />
+
+									<button type="submit" class="btn btn-sm btn-primary nowrap">
+										Update
+									</button>
+								</form>
+							</td>
+
+							<!-- Email Receipt -->
+							<td class="text-center">
+								<form th:action="@{/payments/send-receipt}" method="post" class="email-receipt-form"
+									style="margin:0;">
+									<input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
+									<input type="hidden" name="pgId" th:value="${selectedPg.id}" />
+									<input type="hidden" name="month" th:value="${selectedMonth}" />
+									<input type="hidden" name="year" th:value="${selectedYear}" />
+									<input type="hidden" name="roomNo" th:value="${roomNo}" /> <!-- ✅ add this -->
+									<!-- MUST ADD THESE TWO -->
+									<input type="hidden" name="txnId" class="hidden-txn" />
+									<input type="hidden" name="receiptId" class="hidden-receipt" />
+
+									<input type="hidden" name="paymentMethod"
+										th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].paymentMethod : ''}" />
+									<input type="hidden" name="paymentStatus"
+										th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].status : ''}" />
+									<input type="hidden" name="paymentDate"
+										th:value="${paymentMap[candidate.candidateId] != null ? #temporals.format(paymentMap[candidate.candidateId].paymentDate, 'yyyy-MM-dd') : ''}" />
+
+									<button type="submit" class="btn btn-sm btn-success send-receipt-btn" th:disabled="${paymentMap[candidate.candidateId] == null
+             || paymentMap[candidate.candidateId].status.name() != T(com.pgapp.model.PaymentStatus).PAID.name()}">
+										<i class="fas fa-envelope"></i> Receipt
+									</button>
+								</form>
+
+							</td>
+
+						</tr>
+					</tbody>
+
+
+				</table>
+			</div>
+		</div>
+		<div class="text-center mt-3">
+			<a th:href="@{/candidates/new(pgId=${pgId})}" class="btn btn-success btn-sm mx-2">
+				Register New Candidate
+			</a>
+
+			<a th:href="@{/candidates/deleted(pgId=${pgId})}" class="btn btn-success btn-sm mx-2">
+				View Deleted Candidates
+			</a>
+		</div>
+	</div>
+
+
+
+
+
+
+
+	<!-- Payment Success Modal -->
+	<div id="paymentSuccessModal" class="modal-success">
+		<div class="modal-content-success">
+			<span onclick="closePaymentSuccess()" style="float:right;cursor:pointer;font-size:20px;">×</span>
+			<h4>Success</h4>
+			<p>Payment Status updated successfully!</p>
+			<button class="success-btn" onclick="closePaymentSuccess()">OK</button>
+		</div>
+	</div>
+
+	<!-- Email Success Modal -->
+	<div id="emailSuccessModal" class="modal-success">
+		<div class="modal-content-success">
+			<span onclick="closeEmailSuccess()" style="float:right;cursor:pointer;font-size:20px;">×</span>
+			<h4>Success</h4>
+			<p>Email receipt sent successfully!</p>
+			<button class="success-btn" onclick="closeEmailSuccess()">OK</button>
+		</div>
+	</div>
+
+	<!-- Email Error Modal -->
+	<div id="emailErrorModal" class="modal-success">
+		<div class="modal-content-success">
+			<span onclick="closeEmailError()" style="float:right;cursor:pointer;font-size:20px;">×</span>
+			<h4>Error</h4>
+			<p>Failed to send email receipt. Check email settings!</p>
+			<button class="success-btn" onclick="closeEmailError()">OK</button>
+		</div>
+	</div>
+
+	<!-- Payment Error Modal (for validation) -->
+	<div id="paymentErrorModal" class="modal-success" style="display:none;">
+		<div class="modal-content-error">
+			<span onclick="closePaymentError()"
+				style="float:right;cursor:pointer;font-size:20px;color:#dc3545;font-weight:bold;">
+				×
+			</span>
+
+			<h4 style="color:#dc3545;font-weight:700;margin-bottom:10px;">Error</h4>
+
+			<p style="color:#b30000;font-size:15px;font-weight:600;">
+				Please fill method, status and date before updating.
+			</p>
+
+			<button class="success-btn" onclick="closePaymentError()"
+				style="background:#dc3545;color:white;border:none;padding:8px 18px;border-radius:6px;cursor:pointer;">
+				OK
+			</button>
+		</div>
+	</div>
+	<!-- Transaction ID Error Modal -->
+	<div id="txnErrorModal" class="modal" style="display:none;">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<!-- Validation Icon -->
+					<span style="font-size:20px; color:#ff6f61; margin-right:10px;">&#9888;</span>
+					<h5 class="modal-title">Validation Error</h5>
+					<button type="button" class="close" onclick="closeTxnError()">&times;</button>
+				</div>
+				<div class="modal-body" style="color:#ff3b3b; font-weight:bold;">
+					Transaction ID is required for online payments.
+				</div>
+				<div class="modal-footer" style="justify-content:center;">
+					<button type="button" class="btn btn-primary" onclick="closeTxnError()">OK</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<style>
+		#txnErrorModal .modal-dialog {
+			max-width: 350px;
+			margin: auto;
+		}
+
+		#txnErrorModal .modal-content {
+			background: #fff;
+			color: #333;
+			border-radius: 10px;
+			text-align: center;
+			box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+		}
+
+		#txnErrorModal .modal-header {
+			border-bottom: none;
+			background: transparent;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 5px;
+		}
+
+		#txnErrorModal .modal-title {
+			font-size: 16px;
+			margin: 0;
+		}
+
+		#txnErrorModal .modal-body {
+			font-size: 14px;
+			color: #ff3b3b;
+			font-weight: bold;
+		}
+
+		#txnErrorModal .modal-footer {
+			border-top: none;
+			background: transparent;
+			justify-content: center;
+		}
+
+		#txnErrorModal .btn-primary {
+			background: #ff6f61;
+			color: #fff;
+			border: none;
+			padding: 5px 20px;
+			border-radius: 6px;
+			cursor: pointer;
+		}
+
+		#txnErrorModal .close {
+			color: #333;
+			opacity: 1;
+			font-size: 20px;
+			position: absolute;
+			right: 10px;
+			top: 10px;
+		}
+	</style>
+
+	<script>
+		$(document).ready(function () {
+
+			// ======================================================
+			// AUTO SUBMIT FOR FILTERS (PG, MONTH, YEAR)
+			// ======================================================
+			$('select[name="pgId"], select[name="month"], select[name="year"]').change(function () {
+				$(this).closest('form').submit();
+			});
+
+			// ======================================================
+			// INITIALIZE hidden inputs ON PAGE LOAD
+			// ======================================================
+			$("tr").each(function () {
+				const $row = $(this);
+				const $form = $row.find(".payment-update-form");
+				if ($form.length) syncRowInputs($row, $form);
+			});
+
+			// ======================================================
+			// UPDATE hidden fields whenever visible fields change
+			// ======================================================
+			$(".visible-method, .visible-status, .visible-date, .visible-advance, .visible-amountPaid, .visible-balance, .visible-txn, .visible-receipt")
+				.on("change input", function () {
+					const $row = $(this).closest("tr");
+					const $form = $row.find(".payment-update-form");
+					syncRowInputs($row, $form);
+				});
+
+			// ======================================================
+			// SUBMIT UPDATE PAYMENT
+			// ======================================================
+			$("table").on("submit", ".payment-update-form", function (e) {
+				const $form = $(this);
+				const $row = $form.closest("tr");
+
+				syncRowInputs($row, $form); // Ensure latest sync
+
+				const method = $form.find("input[name='method']").val();
+				const status = $form.find("input[name='status']").val();
+				const date = $form.find("input[name='paymentDate']").val();
+				const txn = $form.find("input[name='transactionId']").val();
+
+				// ================================
+				// VALIDATION RULES
+				// ================================
+
+				// 1. Method, Status, Date MUST be selected
+				if (!method || !status || !date) {
+					e.preventDefault();
+					$("#paymentErrorModal").show();
+					return false;
+				}
+
+				// 2. If method != CASH → TXN ID IS REQUIRED
+				if (method !== "CASH" && (!txn || txn.trim() === "")) {
+					e.preventDefault();
+					$("#txnErrorModal").show();
+					return false;
+				}
+
+				// 3. If method = CASH → auto clear TXN ID
+				if (method === "CASH") {
+					$form.find("input[name='transactionId']").val("");
+				}
+			});
+
+		}); // end document ready
+
+
+		// ======================================================
+		// SYNC visible inputs → hidden inputs
+		// ======================================================
+		function syncRowInputs($row, $form) {
+			const method = $row.find(".visible-method").val();
+			const status = $row.find(".visible-status").val();
+			const date = $row.find(".visible-date").val();
+
+			const advance = cleanNumber($row.find(".visible-advance").val());
+			const amountPaid = cleanNumber($row.find(".visible-amountPaid").val());
+			const balance = cleanNumber($row.find(".visible-balance").val());
+
+			const txn = $row.find(".visible-txn").val() || "";
+			const receipt = $row.find(".visible-receipt").val() || "";
+
+			// ASSIGN to hidden form inputs
+			$form.find("input[name='method']").val(method);
+			$form.find("input[name='status']").val(status);
+			$form.find("input[name='paymentDate']").val(date);
+			$form.find("input[name='advance']").val(advance);
+			$form.find("input[name='amountPaid']").val(amountPaid);
+			$form.find("input[name='balance']").val(balance);
+			$form.find("input[name='transactionId']").val(txn);
+			$form.find("input[name='receiptId']").val(receipt);
+		}
+
+		// ======================================================
+		// Convert blanks → 0.0
+		// ======================================================
+		function cleanNumber(v) {
+			if (v === null || v === undefined) return 0.0;
+			v = v.toString().trim();
+			if (v === "" || isNaN(v)) return 0.0;
+			return parseFloat(v);
+		}
+
+		// ======================================================
+		// MODAL CLOSERS
+		// ======================================================
+		function closePaymentSuccess() {$("#paymentSuccessModal").hide();}
+		function closeEmailSuccess() {$("#emailSuccessModal").hide();}
+		function closeEmailError() {$("#emailErrorModal").hide();}
+		function closePaymentError() {$("#paymentErrorModal").hide();}
+		function closeTxnError() {$("#txnErrorModal").hide();}
+
+		// ======================================================
+		// HANDLE URL MODAL FLAGS
+		// ======================================================
+		window.onload = function () {
+			const params = new URLSearchParams(window.location.search);
+
+			if (params.get("success") === "true" || params.get("updated") === "true") {
+				$("#paymentSuccessModal").show();
+				cleanUrlParams();
+			}
+
+			if (params.get("receiptSent") === "true") {
+				$("#emailSuccessModal").show();
+				$(".send-receipt-btn").prop("disabled", true);
+				cleanUrlParams();
+			}
+
+			if (params.get("receiptSent") === "false") {
+				$("#emailErrorModal").show();
+				cleanUrlParams();
+			}
+		};
+
+		function cleanUrlParams() {
+			const url = new URL(window.location.href);
+			["success", "updated", "receiptSent"].forEach(param => url.searchParams.delete(param));
+			window.history.replaceState({}, document.title, url.toString());
+		}
+
+		// ======================================================
+		// SEND RECEIPT FORM (EMAIL)
+		// ======================================================
+		$(".send-receipt-btn").on("click", function () {
+			const $row = $(this).closest("tr");
+			const txn = $row.find(".visible-txn").val();
+			const receipt = $row.find(".visible-receipt").val();
+
+			$row.find(".hidden-txn").val(txn);
+			$row.find(".hidden-receipt").val(receipt);
+		});
+
+	</script>
+
+
+
+</body>
+
+</html>

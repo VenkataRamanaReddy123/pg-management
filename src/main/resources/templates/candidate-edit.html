@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <!-- Dynamically set page title based on whether candidate object exists -->
+  <title th:text="${candidate != null} ? 'Edit Candidate' : 'Register Candidate'"></title>
+
+  <!-- Bootstrap CSS for styling -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Font Awesome for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+  <style>
+    /* Apply box-sizing globally */
+    * { box-sizing: border-box; }
+
+    /* Body styling with gradient overlay and background image */
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        background: 
+            linear-gradient(rgb(64, 128, 128), rgba(255, 255, 255, 0.85)),
+            url('https://images.pexels.com/photos/6585759/pexels-photo-6585759.jpeg?auto=compress&cs=tinysrgb&w=1600')
+            no-repeat center center/cover;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0;
+        background-attachment: fixed;
+    }
+
+    /* Form container styling */
+    .container {
+      background: rgba(255, 255, 255, 0.15); /* translucent white */
+      backdrop-filter: blur(10px); /* blur background */
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 18px;
+      padding: 25px 28px;
+      width: 95%;
+      max-width: 880px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 6px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Heading styling */
+    h3 {
+      text-align: center;
+      color: #4b0082;
+      font-weight: 700;
+      font-size: 22px;
+      margin-bottom: 18px;
+    }
+
+    /* Form row: flex layout with gap and wrapping */
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    /* Each form group takes available space */
+    .form-group {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    /* Label styling */
+    .form-group label {
+      font-weight: 600;
+      color: #111;
+      font-size: 13px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Input group text styling */
+    .input-group-text {
+      background-color: rgba(255, 255, 255, 0.6);
+      border: none;
+      border-radius: 8px 0 0 8px;
+      font-size: 13px;
+      color: #333;
+    }
+
+    /* Form input styling */
+    .form-control {
+      border-radius: 0 8px 8px 0;
+      border: none;
+      padding: 8px 10px;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Center align text in select dropdowns */
+    select.form-control {
+      text-align: center;
+      color: #555;
+      height: 38px;
+    }
+
+    /* File input specific styling */
+    input[type="file"].form-control {
+      padding: 5px 10px;
+      background-color: #fff;
+    }
+
+    /* Button group layout */
+    .button-group {
+      display: flex;
+      justify-content: flex-start;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    /* Generic button styling */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+      width: 120px;
+    }
+
+    /* Save button style */
+    .btn-save {
+      background-color: #04AA6D;
+      color: white;
+    }
+
+    .btn-save:hover {
+      background-color: #03995f;
+      transform: scale(1.03);
+    }
+
+    /* Cancel button style */
+    .btn-cancel {
+      background-color: #f44336;
+      color: white;
+    }
+
+    .btn-cancel:hover {
+      background-color: #d7372d;
+      transform: scale(1.03);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .form-row { flex-direction: column; }
+      .btn { width: 100%; }
+      .button-group { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- Form title changes dynamically -->
+    <h3 th:text="${candidate != null} ? ' Edit Candidate' : 'Register Candidate'"></h3>
+
+    <!-- Candidate registration/edit form -->
+    <form th:action="@{/candidates/save}" th:object="${candidate}" method="post" enctype="multipart/form-data">
+      <!-- Hidden input for candidate ID (used for edit) -->
+      <input type="hidden" th:field="*{candidateId}" />
+
+      <!-- Name & Gender -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Name:</label>
+              <input class="form-control" th:field="*{name}" required/>
+          </div>
+          <div class="form-group">
+              <label>Gender:</label>
+              <select class="form-control" th:field="*{gender}" required>
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+              </select>
+          </div>
+      </div>
+
+      <!-- Age & DOB -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Age:</label>
+              <input class="form-control" type="number" th:field="*{age}" min="1"/>
+          </div>
+          <div class="form-group">
+              <label>DOB:</label>
+              <input class="form-control" type="date" th:field="*{dob}"/>
+          </div>
+      </div>
+
+      <!-- Mobile & Email -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Mobile:</label>
+              <input class="form-control" th:field="*{mobile}" maxlength="10"/>
+          </div>
+          <div class="form-group">
+              <label>Email:</label>
+              <input class="form-control" type="email" th:field="*{email}" required/>
+          </div>
+      </div>
+
+      <!-- Room No & Aadhaar -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Room No:</label>
+              <input class="form-control" th:field="*{roomNo}"/>
+          </div>
+          <div class="form-group">
+              <label>Aadhaar Number:</label>
+              <!-- Input formatting: auto-add hyphen every 4 digits -->
+              <input class="form-control" th:field="*{aadhaar}" maxlength="14"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,12).replace(/(\d{4})(?=\d)/g,'$1-');"/>
+          </div>
+      </div>
+
+      <!-- Joining Date & Guardian Mobile -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Joining Date:</label>
+              <!-- Max date set to today -->
+              <input class="form-control"
+                type="date"
+                th:field="*{joiningDate}"
+                th:attr="max=${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}"
+                required />
+          </div>
+          <div class="form-group">
+              <label>Guardian Mobile:</label>
+              <!-- Restrict to 10 digits only -->
+              <input class="form-control" th:field="*{guardianMobile}" maxlength="10"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10);"
+              pattern="\d{10}" minlength="10" required />
+          </div>
+      </div>
+
+      <!-- PG Selection (binds to candidate.pg.id) -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Select PG</label>
+              <select class="form-control" th:field="*{pg.id}" required>
+                  <option value="" disabled>-- Select PG --</option>
+                  <!-- Iterate over available PGs -->
+                  <option th:each="pg : ${pgs}" 
+                          th:value="${pg.id}" 
+                          th:text="${pg.pgName}" 
+                          th:selected="${candidate.pg != null} ? ${pg.id} == ${candidate.pg.id} : false">
+                  </option>
+              </select>
+          </div>
+      </div>
+
+      <!-- Upload Photo & ID Proof -->
+      <div class="form-row">
+          <div class="form-group">
+              <label>Upload Photo:</label>
+              <input type="file" class="form-control" name="photoFile" accept="image/*"/>
+          </div>
+          <div class="form-group">
+              <label>Upload ID Proof:</label>
+              <input type="file" class="form-control" name="idProofFile" accept="image/*,application/pdf"/>
+          </div>
+      </div>
+
+      <!-- Save & Cancel buttons -->
+      <div class="button-group">
+          <button type="submit" class="btn btn-save">Save</button>
+          <a th:href="@{'/candidates/list'(pgId=${candidate.pg.id})}" class="btn btn-cancel">Cancel</a>
+      </div>
+    </form>
+  </div>
+</body>
+
+<!-- JS function to update gender asynchronously -->
+<script>
+    function changeGender(candidateId, newGender){
+        fetch('/candidates/update-gender', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: 'candidateId=' + candidateId + '&gender=' + encodeURIComponent(newGender)
+        })
+        .then(response => response.text())
+        .then(status => {
+            // Log update status in console
+            console.log('Gender update status:', status);
+        })
+        .catch(err => {
+            console.error('Error updating gender:', err);
+        });
+    }
+</script>
+
+</html>

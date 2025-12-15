@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Candidate List</title>
+
+    <!-- Bootstrap CSS for layout and styling -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+
+    <style>
+        /* ===== Body and container styling ===== */
+        body {
+            background: #e6f7f9; /* light blue background */
+            font-family: 'Calibri', Tahoma, Verdana, sans-serif !important;
+            overflow-x: hidden; /* prevent horizontal scroll */
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px 10px; /* vertical/horizontal padding */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* subtle shadow */
+            max-width: 100%;
+            margin: 0 3px; /* small side margin */
+        }
+
+        h3 {
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* ===== Search section ===== */
+        .search-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #dff6fa;
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            gap: 15px;
+            flex-wrap: nowrap; /* prevent wrapping */
+        }
+
+        /* Search bar inputs */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-section label {
+            white-space: nowrap; /* prevent line breaks in labels */
+            font-weight: 600;
+        }
+
+        .search-section input {
+            width: 200px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            margin-right: 10px;
+            padding: 6px 10px;
+        }
+
+        .btn-search {
+            background-color: #28a745; /* green */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+            margin-right: 5px;
+        }
+
+        .btn-search:hover { background-color: #218838; }
+
+        .btn-reset {
+            background-color: #dc3545; /* red */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 6px 14px;
+        }
+
+        .btn-reset:hover { background-color: #c82333; }
+
+        /* ===== Table Styling ===== */
+        table {
+            font-family: 'Calibri', Tahoma, Verdana, sans-serif !important;
+            width: 100%;
+            text-align: center;
+            vertical-align: middle;
+            border-collapse: collapse;
+            word-wrap: break-word;
+        }
+
+        th {
+            background-color: #007b7f;
+            color: white;
+            white-space: nowrap;
+        }
+
+        td { vertical-align: middle; padding: 8px; background-color: #fff; }
+
+        .table-pink { background-color: #ffe6f2 !important; }
+
+        .table-responsive {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .table tbody tr:last-child td { border-bottom: none; }
+
+        /* ===== Row Colors by Gender & Vacation ===== */
+        .female-row td { background-color: #f8bcbc !important; } /* pink for female */
+        .male-row td { background-color: #c8e6c9 !important; }   /* green for male */
+        .vacation-row td { background-color: rgb(255, 128, 0) !important; } /* orange for vacated */
+
+        /* Buttons inherit background inside colored rows */
+        .female-row button, .female-row .btn { background-color: inherit !important; color: inherit !important; border: none !important; }
+        .female-row .btn-primary { background-color: #007bff !important; color: white !important; border: 1px solid #007bff !important; }
+        .female-row .btn-success { background-color: #28a745 !important; color: white !important; border: 1px solid #28a745 !important; }
+        .female-row .btn-danger { background-color: #dc3545 !important; color: white !important; border: 1px solid #dc3545 !important; }
+
+        /* ===== Summary boxes ===== */
+        .summary-container { display: flex; align-items: center; }
+        .summary-inline {
+            display: flex;
+            align-items: center;
+            padding: 8px 15px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.08);
+            font-weight: 600;
+            white-space: nowrap;
+            gap: 10px;
+        }
+
+        .summary-inline i { margin-right: 4px; font-size: 14px; }
+        .summary-inline .divider { color: #777; }
+
+        /* Counts */
+        #totalCount { color: #28a745; font-weight: 700; }
+        #maleCount { color: #007bff; font-weight: 700; }
+        #femaleCount { color: #e91e63; font-weight: 700; }
+        #vacationCount { color: #ffc107; font-weight: 700; }
+
+        /* ===== Modals ===== */
+        .modal-custom {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            padding-top: 200px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.4); /* semi-transparent backdrop */
+        }
+
+        .modal-content-custom {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 350px;
+            text-align: center;
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-modal { float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .modal-btn { border: none; border-radius: 6px; padding: 8px 16px; margin: 10px 8px; cursor: pointer; color: white; }
+        .cancelbtn { background-color: #6c757d; }
+        .deletebtn { background-color: #dc3545; }
+
+        /* ===== Image Modal ===== */
+        .modal-img { max-width: 100%; max-height: 80vh; border-radius: 6px; }
+        .close-btn { font-size: 35px; cursor: pointer; }
+        .download-icon { font-size: 28px; color: #007bff; cursor: pointer; }
+
+        /* ===== Toasts ===== */
+        #successToast { visibility: hidden; min-width: 260px; margin-left: -130px; background-color: #28a745; color: white; text-align: center; border-radius: 8px; padding: 14px; position: fixed; z-index: 2000; left: 50%; bottom: 30px; font-size: 16px; }
+        #successToast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+
+        @keyframes fadein { from { bottom: 0; opacity: 0; } to { bottom: 30px; opacity: 1; } }
+        @keyframes fadeout { from { bottom: 30px; opacity: 1; } to { bottom: 0; opacity: 0; } }
+
+        /* ===== Responsive ===== */
+        @media (max-width: 768px) {
+            .search-section { flex-direction: column; align-items: flex-start; }
+        }
+        .search-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 100px; }
+        .logout-btn { margin-left: 11px; }
+        
+        /* ===== Mobile View ===== */  
+        
+        /* Responsive Table Improvements */
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scroll on iOS */
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+table {
+    min-width: 1000px; /* force horizontal scroll if screen is smaller */
+    white-space: nowrap; /* prevent text wrap */
+}
+
+/* Optional: reduce padding and font-size on mobile */
+@media (max-width: 768px) {
+    table th, table td {
+        padding: 6px 8px;
+        font-size: 13px;
+    }
+    .search-section { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
+
+        
+    </style>
+</head>
+
+<body>
+    <div class="container mt-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>View Candidates <span class="text-primary" th:text="' - ' + ${pgName}"></span></h3>
+            <!-- Replaceable header fragment -->
+            <th:block th:replace="header :: pageHeader(${selectedPg}, ${false})"></th:block>
+        </div>
+
+        <!-- ===== Search Section ===== -->
+        <div class="search-section">
+            <!-- Room Number Filter -->
+            <div class="search-bar">
+                <label>Room Number:</label>
+                <input type="text" id="roomSearch" placeholder="Enter Room Number">
+                <button class="btn-search" onclick="filterRoom()">Search</button>
+                <button class="btn-reset" onclick="resetFilter()">Reset</button>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="summary-container">
+                <div class="summary-inline">
+                    <strong>Total:</strong> <span id="totalCount">0</span>
+                    <span class="divider">|</span>
+                    <strong><i class="fas fa-male"></i> Male:</strong> <span id="maleCount">0</span>
+                    <span class="divider">|</span>
+                    <strong><i class="fas fa-female"></i> Female:</strong> <span id="femaleCount">0</span>
+                    <span class="divider">|</span>
+                    <strong><i class="fas fa-door-open"></i> PG Vacated:</strong> <span id="vacationCount">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Candidate Table ===== -->
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle" id="candidateTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Candidate Mobile</th>
+                        <th>Email</th>
+                        <th>Room</th>
+                        <th>Aadhaar</th>
+                        <th>Joining Date</th>
+                        <th>Guardian Mobile</th>
+                        <th>ID Proofs</th>
+                        <th>Actions</th>
+                        <th>Vacated Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Loop through candidates -->
+                    <tr th:each="c : ${candidates}" th:classappend="|
+                        ${c.gender != null ? (c.gender.toLowerCase() == 'female' ? 'female-row' : 
+                                              c.gender.toLowerCase() == 'male' ? 'male-row' : '') : ''} 
+                        ${c.vacationDate != null ? ' vacation-row' : ''} |">
+                        <td th:text="${c.name}"></td>
+                        <td th:text="${c.gender}"></td>
+                        <td th:text="${c.mobile}"></td>
+                        <td th:text="${c.email}"></td>
+                        <td th:text="${c.roomNo}"></td>
+                        <td th:text="${c.aadhaar}"></td>
+                        <td th:text="${#dates.format(c.joiningDate, 'dd-MMM-yyyy')}"></td>
+                        <td th:text="${c.guardianMobile}"></td>
+                        <td>
+                            <div class="proof-buttons">
+                                <!-- Photo Button -->
+                                <button th:if="${c.photo != null}" class="btn btn-success btn-sm"
+                                    th:onclick="'openImageModal(\'/candidates/photo/' + ${c.candidateId} + '\')'">
+                                    <i class="fas fa-camera mr-2"></i>Photo
+                                </button>
+                                <!-- ID Proof Button -->
+                                <button th:if="${c.idProof != null}" class="btn btn-success btn-sm"
+                                    th:onclick="'openImageModal(\'/candidates/idProof/' + ${c.candidateId} + '\')'">
+                                    <i class="fas fa-id-card mr-2"></i>ID Proof
+                                </button>
+                                <!-- No Proofs -->
+                                <span th:if="${c.photo == null and c.idProof == null}" class="text-muted">No Proofs</span>
+                            </div>
+                        </td>
+
+                        <!-- Edit/Delete Actions -->
+                        <td>
+                            <a th:href="@{'/candidates/edit/' + ${c.candidateId}}" class="btn btn-sm btn-primary">Edit</a>
+                            <button class="btn btn-sm btn-danger"
+                                th:onclick="'openDeleteModal(' + ${c.candidateId} + ')'">Delete</button>
+                        </td>
+
+                        <!-- Vacation Date Column -->
+                        <td>
+                            <input type="date" th:value="${c.vacationDate}" th:id="'vacationDate_' + ${c.candidateId}" style="width: 140px; padding: 3px;" />
+                            <button class="btn btn-sm btn-success" th:onclick="'updateVacation(' + ${c.candidateId} + ')'">Update</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===== Page Actions ===== -->
+        <div class="text-center mt-3">
+            <a th:href="@{/candidates/new(pgId=${selectedPgId})}" class="btn btn-success btn-sm mx-2">Register New Candidate</a>
+            <a th:href="@{/payments/history(pgId=${pgId})}" class="btn btn-success btn-sm mx-2">Payment History</a>
+            <a th:href="@{/candidates/deleted(pgId=${pgId})}" class="btn btn-success btn-sm mx-2">View Deleted Candidates</a>
+        </div>
+    </div>
+
+    <!-- ===== Modals Section ===== -->
+    <!-- View Image Modal -->
+    <div class="modal fade" id="viewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <a id="downloadBtn" href="#" download title="Download">
+                        <i class="fas fa-download download-icon"></i>
+                    </a>
+                    <span class="close-btn" data-dismiss="modal">&times;</span>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="modalImage" src="" class="modal-img" alt="Document">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-custom">
+        <div class="modal-content-custom">
+            <span class="close-modal" onclick="closeDeleteModal()">&times;</span>
+            <p>Are you sure you want to delete this candidate?</p>
+            <button class="modal-btn cancelbtn" onclick="closeDeleteModal()">Cancel</button>
+            <button class="modal-btn deletebtn" onclick="confirmDelete()">Delete</button>
+        </div>
+    </div>
+
+    <!-- Success Modals (Deleted, Added, Updated) -->
+    <div id="deletedSuccessModal" class="modal-custom">
+        <div class="modal-content-custom" style="border-top: 6px solid #dc3545;">
+            <span class="close-modal" onclick="closeDeletedSuccessModal()">&times;</span>
+            <p style="font-size:18px; font-weight:600; color:#dc3545;">Candidate Deleted Successfully!</p>
+        </div>
+    </div>
+
+    <div id="createModal" class="modal-custom">
+        <div class="modal-content-custom" style="border-top: 6px solid #28a745;">
+            <span class="close-modal" onclick="closeCreateModal()">&times;</span>
+            <p style="font-size:18px; font-weight:600; color:#28a745;">Candidate Added Successfully!</p>
+            <button class="modal-btn cancelbtn" onclick="closeCreateModal()">OK</button>
+        </div>
+    </div>
+
+    <div id="editModal" class="modal-custom">
+        <div class="modal-content-custom" style="border-top: 6px solid #007bff;">
+            <span class="close-modal" onclick="closeEditModal()">&times;</span>
+            <p style="font-size:18px; font-weight:600; color:#007bff;">Candidate Updated Successfully!</p>
+            <button class="modal-btn cancelbtn" onclick="closeEditModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Hidden container for server success messages -->
+    <div th:if="${success}">
+        <span id="successMsg" th:text="${success}" style="display:none"></span>
+    </div>
+
+    <!-- ===== JS ===== -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Candidate page JS (filter, update, modals) -->
+  <script>
+/* =======================
+   Candidate Page Script
+   - Handles stats calculation, filtering, modals, and vacation date updates
+   - All existing behavior preserved
+   - Comments added for clarity
+   ======================= */
+
+/* ------------------ Candidate Stats Calculation ------------------ */
+// Updates total, male, female, and vacation counts based on visible rows
+function updateStats() {
+    const rows = document.querySelectorAll("#candidateTable tbody tr");
+    let total = 0, male = 0, female = 0, vacation = 0;
+
+    rows.forEach(row => {
+        if (row.style.display === "none") return; // skip hidden rows
+
+        total++;
+
+        // Access gender and vacation date columns
+        const genderCell = row.cells[1];
+        const vacCell = row.cells[10];
+        const gender = genderCell ? genderCell.innerText.trim().toLowerCase() : "";
+        const vacationDate = vacCell && vacCell.querySelector("input") ? vacCell.querySelector("input").value : "";
+
+        if (gender === "male") male++;
+        if (gender === "female") female++;
+        if (vacationDate && vacationDate.trim() !== "") vacation++;
+    });
+
+    // Update DOM elements with calculated stats
+    const setText = (id, value) => { const el = document.getElementById(id); if (el) el.innerText = value; };
+    setText("totalCount", total);
+    setText("maleCount", male);
+    setText("femaleCount", female);
+    setText("vacationCount", vacation);
+}
+
+/* ------------------ Room Number Filter ------------------ */
+// Filters table rows based on room number input
+function filterRoom() {
+    const input = document.getElementById("roomSearch").value.trim().toLowerCase();
+    const rows = document.querySelectorAll("#candidateTable tbody tr");
+
+    rows.forEach(row => {
+        const roomCell = row.cells[4];
+        if (!roomCell) return;
+        const value = roomCell.textContent.toLowerCase();
+        row.style.display = (input === "" || value.includes(input)) ? "" : "none";
+    });
+
+    updateStats(); // recalc stats after filtering
+}
+
+// Reset room filter and show all rows
+function resetFilter() {
+    document.getElementById("roomSearch").value = "";
+    filterRoom();
+}
+
+/* ------------------ Delete Candidate ------------------ */
+let deleteCandidateId = null;
+
+// Open custom delete modal and store candidateId
+function openDeleteModal(candidateId) {
+    deleteCandidateId = candidateId;
+    fadeIn(document.getElementById('deleteModal'));
+}
+
+// Close delete modal and clear candidateId
+function closeDeleteModal() {
+    deleteCandidateId = null;
+    fadeOut(document.getElementById('deleteModal'));
+}
+
+// Confirm deletion and redirect to server endpoint
+function confirmDelete() {
+    if (deleteCandidateId) {
+        const params = new URLSearchParams(window.location.search);
+        const pgId = params.get("pgId");
+        let redirectUrl = '/candidates/delete/' + deleteCandidateId + '?deleted=true';
+        if (pgId) redirectUrl += '&pgId=' + pgId;
+        window.location.href = redirectUrl;
+    }
+}
+
+/* ------------------ Deleted Success Modal ------------------ */
+// Show temporary success modal for deletion
+function openDeletedSuccessModal() {
+    fadeIn(document.getElementById("deletedSuccessModal"));
+    setTimeout(() => { fadeOut(document.getElementById("deletedSuccessModal")); }, 2000);
+}
+
+// Close deleted success modal manually
+function closeDeletedSuccessModal() {
+    fadeOut(document.getElementById("deletedSuccessModal"));
+}
+
+/* ------------------ Image Modal ------------------ */
+// Open modal to view image and set download link
+function openImageModal(imageUrl) {
+    const modalImage = document.getElementById("modalImage");
+    const downloadBtn = document.getElementById("downloadBtn");
+    modalImage.src = imageUrl;
+    downloadBtn.href = imageUrl;
+    $('#viewModal').modal('show');
+}
+
+/* ------------------ Create/Edit Modals ------------------ */
+function openCreateModal() { fadeIn(document.getElementById("createModal")); }
+function closeCreateModal() { fadeOut(document.getElementById("createModal")); }
+
+function openEditModal() { fadeIn(document.getElementById("editModal")); }
+function closeEditModal() { fadeOut(document.getElementById("editModal")); }
+
+/* ------------------ Fade In / Fade Out Utility Functions ------------------ */
+// Smooth fade-in effect
+function fadeIn(el) {
+    if (!el) return;
+    el.style.opacity = 0;
+    el.style.display = "block";
+    let last = +new Date();
+    const tick = function () {
+        el.style.opacity = +el.style.opacity + (new Date() - last) / 200;
+        last = +new Date();
+        if (+el.style.opacity < 1) requestAnimationFrame(tick);
+    };
+    tick();
+}
+
+// Smooth fade-out effect
+function fadeOut(el) {
+    if (!el) return;
+    el.style.opacity = 1;
+    const last = +new Date();
+    const tick = function () {
+        el.style.opacity = +el.style.opacity - (new Date() - last) / 200;
+        if (+el.style.opacity > 0) {
+            requestAnimationFrame(tick);
+        } else {
+            el.style.display = "none";
+        }
+    };
+    tick();
+}
+
+/* ------------------ Per-row Vacation Update Controls ------------------ */
+/* 
+   - Tracks original vacation date per row
+   - Enables Update button only if input value changed
+   - Prevents accidental duplicate updates
+*/
+function initPerRowVacationControls() {
+    const inputs = document.querySelectorAll("input[id^='vacationDate_']");
+
+    inputs.forEach(input => {
+        const td = input.closest('td');
+        if (!td) return;
+        const updateBtn = td.querySelector('button');
+        if (!updateBtn) return;
+
+        input.dataset.originalValue = input.value || "";
+        updateBtn.disabled = true;
+
+        // Enable button only when input value differs from original
+        input.addEventListener('input', function () {
+            const original = input.dataset.originalValue || "";
+            const current = input.value || "";
+            updateBtn.disabled = (current === original);
+        });
+    });
+}
+
+/* ------------------ Update Vacation Date (AJAX) ------------------ */
+/*
+   - Sends new vacation date to server via fetch POST
+   - Updates row style and summary counters on success
+   - Shows temporary toast
+   - Keeps button disabled after successful update
+*/
+function updateVacation(candidateId) {
+    const input = document.getElementById('vacationDate_' + candidateId);
+    if (!input) {
+        alert('Input not found for candidate ' + candidateId);
+        return;
+    }
+
+    const td = input.closest('td');
+    const updateBtn = td ? td.querySelector('button') : null;
+    const vacationDate = input.value;
+
+    if (updateBtn) updateBtn.disabled = true;
+
+    fetch('/candidates/updateVacation', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({candidateId: candidateId, vacationDate: vacationDate})
+    })
+    .then(response => response.json().catch(() => ({ success: false, message: 'Invalid JSON response' })))
+    .then(data => {
+        if (data.success) {
+            const row = input.closest('tr');
+            vacationDate ? row.classList.add('vacation-row') : row.classList.remove('vacation-row');
+            updateStats();
+
+            // Temporary toast notification
+            const toast = document.createElement('div');
+            toast.innerText = 'Vacated Date Updated Successfully!';
+            Object.assign(toast.style, {
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                background: 'linear-gradient(90deg, #6a11cb, #2575fc)',
+                color: '#fff',
+                padding: '15px 25px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                zIndex: 9999,
+                fontSize: '16px',
+                textAlign: 'center'
+            });
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2000);
+
+            // Reset original value and keep button disabled
+            input.dataset.originalValue = vacationDate || "";
+            if (updateBtn) updateBtn.disabled = true;
+        } else {
+            alert('Error: ' + (data.message || 'Update failed'));
+            if (updateBtn) updateBtn.disabled = false;
+        }
+    })
+    .catch(err => {
+        alert('Error: ' + err);
+        if (updateBtn) updateBtn.disabled = false;
+    });
+}
+
+/* ------------------ On Page Load ------------------ */
+window.addEventListener('load', function () {
+    updateStats(); // initial stats
+    initPerRowVacationControls(); // setup per-row vacation logic
+
+    // Handle URL query params for deleted modal
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("deleted")) {
+        openDeletedSuccessModal();
+        window.history.replaceState({}, document.title, window.location.pathname); // remove param without reload
+    }
+
+    // Auto-open create/edit modals if success message exists
+    const msgHolder = document.getElementById("successMsg");
+    if (msgHolder) {
+        const msg = msgHolder.innerText.toLowerCase();
+        if (msg.includes("added")) openCreateModal();
+        else if (msg.includes("updated")) openEditModal();
+    }
+});
+</script>
+
+</body>
+</html>

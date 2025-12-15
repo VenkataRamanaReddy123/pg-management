@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change MPIN</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+     <style>
+        /* ========================
+           Body & Background
+        ======================= */
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: url('https://images.pexels.com/photos/21014/pexels-photo.jpg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260')
+                        no-repeat center center/cover;
+            height: 100vh;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ========================
+           Container for Reset Box
+        ======================= */
+        .change-box {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 15px;
+            width: 400px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* ========================
+           Headings
+        ======================= */
+        h3 {
+            text-align: center;
+            color: #4b0082;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        /* ========================
+           Buttons
+        ======================= */
+        .btn-primary {
+            background-color: #4b0082;
+            border: none;
+            font-weight: bold;
+            border-radius: 8px;
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            background-color: #3a006b;
+        }
+
+        /* ========================
+           Form Labels & Alerts
+        ======================= */
+        .form-group label {
+            font-weight: 500;
+        }
+
+        .alert {
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .text-center a {
+            color: #4b0082;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .text-center a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========================
+           Success Modal Styles
+        ======================= */
+        #successModal {
+            display: none;
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content-success {
+            background-color: #fff;
+            margin: 20% auto;
+            padding: 20px;
+            border-radius: 12px;
+            width: 350px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+        }
+        .close-success {
+            position: absolute;
+            right: 10px;
+            top: 5px;
+            font-size: 22px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .success-btn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .success-btn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="change-box">
+        <h3>Reset MPIN</h3>
+
+        <div id="alertBox"></div>
+
+        <form id="changeMpinForm">
+            <!-- Registered Mobile Input -->
+            <div class="form-group">
+                <label>Registered Mobile Number</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-mobile-alt"></i></span>
+                    <input type="text" id="mobile" class="form-control" placeholder="Enter your registered mobile" required maxlength="10" pattern="\d{10}">
+                    <button type="button" id="sendOtpBtn" class="btn btn-primary btn-sm">Send OTP</button>
+                </div>
+            </div>
+
+            <!-- OTP Input -->
+            <div class="form-group">
+                <label>Enter OTP</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-key"></i></span>
+                    <input type="text" id="otp" class="form-control" placeholder="Enter 4-digit OTP" maxlength="4" inputmode="numeric" pattern="\d*">
+                    <button type="button" id="verifyOtpBtn" class="btn btn-primary">Verify OTP</button>
+                </div>
+                <small id="otpVerifyMsg" class="form-text"></small>
+            </div>
+
+            <!-- New MPIN Input -->
+            <div class="form-group">
+                <label>New MPIN</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                    <input type="password" id="newMpin" class="form-control" placeholder="Enter new 4-digit MPIN" required maxlength="4" inputmode="numeric" pattern="\d*">
+                    <span class="input-group-text" style="cursor: pointer;" id="toggleNewMpin"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+
+            <!-- Confirm MPIN Input -->
+            <div class="form-group">
+                <label>Confirm MPIN</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-check"></i></span>
+                    <input type="password" id="confirmMpin" class="form-control" placeholder="Confirm new 4-digit MPIN" required maxlength="4" inputmode="numeric" pattern="\d*">
+                    <span class="input-group-text" style="cursor: pointer;" id="toggleConfirmMpin"><i class="fas fa-eye"></i></span>
+                </div>
+            </div>
+
+            <!-- Update MPIN Button -->
+            <button type="submit" id="updateMpinBtn" class="btn btn-primary btn-block mt-3" disabled>Update MPIN</button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a th:href="@{/login}">Back to Login</a>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal">
+        <div class="modal-content-success">
+            <span class="close-success" onclick="closeSuccessModal()">×</span>
+            <h4>Success</h4>
+            <p>MPIN has been reset successfully!</p>
+            <button class="success-btn" onclick="goToLogin()">OK</button>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+
+            // ✅ Send OTP for MPIN
+            $("#sendOtpBtn").click(function() {
+                const mobile = $("#mobile").val().trim();
+                if (mobile.length !== 10) {
+                    showAlert("Please enter a valid 10-digit mobile number.", "danger");
+                    return;
+                }
+                $.post("/send-otp-mpin", { mobile }, function(response) {
+                    showAlert(response, "info");
+                }).fail(() => {
+                    showAlert("Failed to send OTP. Try again.", "danger");
+                });
+            });
+
+            // ✅ Verify OTP
+            $("#verifyOtpBtn").click(function() {
+                const mobile = $("#mobile").val().trim();
+                const otp = $("#otp").val().trim();
+                const msgBox = $("#otpVerifyMsg");
+
+                if (mobile.length !== 10) {
+                    msgBox.text("Enter registered mobile first").removeClass("text-success").addClass("text-danger");
+                    return;
+                }
+
+                if (otp.length !== 4) {
+                    msgBox.text("Enter a 4-digit OTP").removeClass("text-success").addClass("text-danger");
+                    return;
+                }
+
+                $.post("/verify-otp-mpin", { mobile, otp }, function(response) {
+                    if (response === "success") {
+                        msgBox.text("OTP verified successfully").removeClass("text-danger").addClass("text-success");
+                    } else {
+                        msgBox.text("Invalid OTP. Try again").removeClass("text-success").addClass("text-danger");
+                    }
+                }).fail(() => {
+                    msgBox.text("OTP verification failed. Try again").removeClass("text-success").addClass("text-danger");
+                });
+            });
+
+            // ✅ Submit new MPIN
+            $("#changeMpinForm").submit(function(event) {
+                event.preventDefault();
+                const mobile = $("#mobile").val().trim();
+                const otp = $("#otp").val().trim();
+                const newMpin = $("#newMpin").val().trim();
+                const confirmMpin = $("#confirmMpin").val().trim();
+
+                if (newMpin !== confirmMpin) {
+                    showAlert("MPINs do not match.", "danger");
+                    return;
+                }
+
+                if (!/^\d{4}$/.test(newMpin)) {
+                    showAlert("MPIN must be a 4-digit number.", "danger");
+                    return;
+                }
+
+                $.post("/reset-mpin", { mobile, otp, newMpin, confirmMpin }, function(response) {
+                    if (response.includes("successfully")) {
+                        $("#successModal").show();
+                    } else {
+                        showAlert(response, "danger");
+                    }
+                }).fail(() => {
+                    showAlert("Something went wrong. Please try again.", "danger");
+                });
+            });
+
+            // ✅ Toggle New MPIN visibility
+            $("#toggleNewMpin").click(function() {
+                const input = $("#newMpin");
+                const icon = $(this).find("i");
+                if (input.attr("type") === "password") {
+                    input.attr("type", "text");
+                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                } else {
+                    input.attr("type", "password");
+                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                }
+            });
+
+            // ✅ Toggle Confirm MPIN visibility
+            $("#toggleConfirmMpin").click(function() {
+                const input = $("#confirmMpin");
+                const icon = $(this).find("i");
+                if (input.attr("type") === "password") {
+                    input.attr("type", "text");
+                    icon.removeClass("fa-eye").addClass("fa-eye-slash");
+                } else {
+                    input.attr("type", "password");
+                    icon.removeClass("fa-eye-slash").addClass("fa-eye");
+                }
+            });
+
+            // ✅ Enable Update button only when both fields are filled
+            $("#newMpin, #confirmMpin").on("input", function() {
+                const newMpinVal = $("#newMpin").val().trim();
+                const confirmMpinVal = $("#confirmMpin").val().trim();
+                $("#updateMpinBtn").prop("disabled", !(newMpinVal && confirmMpinVal));
+            });
+
+            // ✅ Show alerts
+            function showAlert(message, type) {
+                $("#alertBox").html(`<div class="alert alert-${type}">${message}</div>`);
+                setTimeout(() => $("#alertBox").html(""), 4000);
+            }
+
+        });
+
+        // ✅ Close success modal
+        function closeSuccessModal() {
+            $("#successModal").hide();
+        }
+
+        // ✅ Redirect to Login page
+        function goToLogin() {
+            window.location.href = "/login";
+        }
+        
+        // Restrict OTP and MPIN fields to digits only
+['otp','newMpin','confirmMpin'].forEach(id => {
+    document.getElementById(id).addEventListener('input', function() {
+        this.value = this.value.replace(/\D/g, ''); // remove non-numeric characters
+    });
+});
+    </script>
+</body>
+
+</html>

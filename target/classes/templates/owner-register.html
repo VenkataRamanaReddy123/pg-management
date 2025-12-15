@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>PG Owner Registration</title>
+
+	<!-- ==================== CSS Libraries ==================== -->
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+	<style>
+		/* ==================== PAGE STYLING ==================== */
+		body {
+			margin: 0;
+			padding: 10px 0;
+			/* reduced top & bottom padding */
+			font-family: 'Segoe UI', sans-serif;
+			background: url('https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260') no-repeat center center / cover;
+			display: flex;
+			justify-content: center;
+			align-items: flex-start;
+		}
+
+		/* ==================== REGISTER CARD ==================== */
+		.register-card {
+			width: 430px;
+			/* slightly reduced width */
+			max-width: 95%;
+			padding: 18px 22px;
+			/* slightly reduced padding for compact look */
+			background: rgba(255, 255, 255, 0.20);
+			backdrop-filter: blur(12px);
+			-webkit-backdrop-filter: blur(12px);
+			border-radius: 15px;
+			border: 1px solid rgba(255, 255, 255, 0.35);
+			box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+		}
+
+		/* Heading */
+		h4 {
+			margin: 0 0 14px 0;
+			/* reduced space */
+			text-align: center;
+			font-weight: bold;
+			color: #4b0082;
+			padding: 0;
+		}
+
+		/* ==================== FORM ELEMENTS ==================== */
+		.form-group {
+			margin-bottom: 10px !important;
+			/* reduced gap between fields */
+		}
+
+		.form-group label {
+			font-size: 14px;
+			font-weight: 700;
+			color: #000;
+			margin: 0 0 2px 0;
+			/* cleaner spacing */
+			display: block;
+		}
+
+		/* Inputs */
+		.form-control {
+			height: 38px;
+			/* slightly smaller input height */
+			border-radius: 0 7px 7px 0;
+			background-color: rgba(255, 255, 255, 0.85);
+			font-size: 14px;
+			/* slightly smaller text */
+		}
+
+		/* Input Icons (Left) */
+		.input-group-text {
+			width: 38px;
+			/* slightly smaller icon box */
+			border: none;
+			justify-content: center;
+			background-color: rgba(220, 220, 220, 0.6);
+			border-radius: 8px 0 0 8px;
+		}
+
+		/* Input Icons (Right) */
+		.input-group .input-group-append .input-group-text {
+			border-radius: 0 8px 8px 0;
+		}
+
+		/* ==================== REGISTER BUTTON ==================== */
+		.btn-register {
+			width: 100%;
+			padding: 9px;
+			/* slightly reduced */
+			border: none;
+			font-size: 14px;
+			font-weight: bold;
+			color: white;
+			background-color: #4b0082;
+			border-radius: 8px;
+			margin-top: 8px;
+			transition: 0.3s;
+		}
+
+		.btn-register:hover {
+			background-color: #3a006b;
+		}
+
+		/* ==================== TEXT LINKS ==================== */
+		.text-link {
+			margin-top: 8px;
+			/* small correction */
+			text-align: center;
+			font-size: 13px;
+		}
+
+		.text-link a {
+			color: #4b0082;
+			font-weight: 500;
+			text-decoration: none;
+		}
+
+		.text-link a:hover {
+			text-decoration: underline;
+		}
+
+		/* ==================== PASSWORD ERROR ==================== */
+		#passwordError {
+			display: none;
+			margin-top: 2px;
+			font-size: 12px;
+			color: red;
+		}
+
+		/* ==================== SUCCESS MODAL ==================== */
+		#successModal {
+			position: fixed;
+			inset: 0;
+			display: none;
+			background-color: rgba(0, 0, 0, 0.5);
+			z-index: 9999;
+		}
+
+		/* Modal Box */
+		.modal-content-success {
+			width: 330px;
+			background: white;
+			padding: 18px;
+			margin: 15% auto;
+			border-radius: 12px;
+			text-align: center;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+			position: relative;
+		}
+
+		/* Modal Close Button */
+		.close-success {
+			position: absolute;
+			top: 5px;
+			right: 10px;
+			font-size: 21px;
+			font-weight: bold;
+			cursor: pointer;
+		}
+
+		/* Modal OK Button */
+		.success-btn {
+			margin-top: 10px;
+			padding: 8px 18px;
+			color: white;
+			border: none;
+			border-radius: 8px;
+			background-color: #28a745;
+			cursor: pointer;
+		}
+
+		.success-btn:hover {
+			background-color: #218838;
+		}
+
+		/* ==================== SweetAlert Styling ==================== */
+		.swal-custom-popup {
+			border-radius: 12px !important;
+			padding: 8px !important;
+		}
+
+		.swal-custom-title {
+			font-size: 14px !important;
+			font-weight: 700 !important;
+		}
+
+		.swal-small-btn {
+			padding: 6px 14px !important;
+			font-size: 12px !important;
+			border-radius: 8px !important;
+		}
+
+		/* ==================== MPIN BOXES ==================== */
+		.mpin-box {
+			width: 40px;
+			/* slightly smaller */
+			height: 48px;
+			font-size: 20px;
+			text-align: center;
+			border: 2px solid #ced4da;
+			border-radius: 8px;
+			outline: none;
+		}
+
+		.mpin-box:focus {
+			border-color: #4b0082;
+			box-shadow: 0 0 5px rgba(75, 0, 130, 0.4);
+		}
+
+		/* Horizontal SweetAlert Popup – No Scroll */
+		.swal-horizontal-popup {
+			border-radius: 12px !important;
+			padding: 10px 14px !important;
+			max-width: 420px !important;
+		}
+
+		/* Allow wrapping but keep compact height */
+		.swal2-html-container {
+			white-space: normal !important;
+			/* allow wrap */
+			word-break: break-word !important;
+			font-size: 13px !important;
+			line-height: 1.4 !important;
+			overflow: hidden !important;
+			/* no scroll */
+		}
+
+		/* Title smaller */
+		.swal-horizontal-title {
+			font-size: 14px !important;
+		}
+	</style>
+
+</head>
+
+<body>
+
+	<!-- ==================== REGISTER CARD ==================== -->
+	<div class="register-card">
+		<h4>PG Owner Registration</h4>
+
+		<!-- ==================== REGISTRATION FORM ==================== -->
+		<form th:action="@{/register}" method="post" onsubmit="return validateForm()">
+
+			<!-- Owner Name -->
+			<div class="form-group mb-2">
+				<label> Name</label>
+				<div class="input-group">
+					<span class="input-group-text"><i class="fas fa-building"></i></span>
+					<input type="text" class="form-control" name="ownerName" placeholder="Enter Your Name"
+						th:value="${ownerName}" required>
+				</div>
+			</div>
+
+			<!-- PG Name -->
+			<div class="form-group mb-2">
+				<label>PG Name</label>
+				<div class="input-group">
+					<span class="input-group-text"><i class="fas fa-building"></i></span>
+					<input type="text" class="form-control" name="pgName" placeholder="Enter PG Name"
+						th:value="${pgName}" required>
+				</div>
+			</div>
+
+			<!-- PG Address -->
+			<div class="form-group mb-2">
+				<label>PG Address</label>
+				<div class="input-group">
+					<span class="input-group-text"><i class="fas fa-map-marker-alt"></i></span>
+					<input type="text" class="form-control" name="pgAddress" placeholder="Enter PG Address"
+						th:value="${pgAddress}" required>
+				</div>
+			</div>
+
+			<!-- Mobile Number -->
+			<div class="form-group mb-2">
+				<label>Mobile Number</label>
+				<div class="input-group">
+					<span class="input-group-text"><i class="fas fa-phone"></i></span>
+					<input type="text" class="form-control" name="mobile" maxlength="10" pattern="\d{10}"
+						placeholder="Enter Mobile Number" th:value="${mobile}" required>
+				</div>
+			</div>
+
+			<!-- Email -->
+			<div class="form-group mb-2">
+				<label>Email </label>
+				<div class="input-group">
+					<span class="input-group-text"><i class="fas fa-envelope"></i></span>
+					<input type="email" class="form-control" name="email" placeholder="Enter Email" th:value="${email}"
+						required>
+				</div>
+			</div>
+
+			<!-- Password -->
+			<div class="form-group mb-2">
+				<label>Password</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fas fa-lock"></i></span>
+					</div>
+					<input type="password" class="form-control" id="password" name="password"
+						placeholder="Enter Password" required>
+					<div class="input-group-append">
+						<span class="input-group-text" id="togglePassword" style="cursor: pointer;"><i
+								class="fa fa-eye"></i></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Confirm Password -->
+			<div class="form-group mb-2">
+				<label>Confirm Password</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fas fa-lock"></i></span>
+					</div>
+					<input type="password" class="form-control" id="confirmPassword" name="confirmPassword"
+						placeholder="Confirm Password" required>
+					<div class="input-group-append">
+						<span class="input-group-text" id="toggleConfirmPassword" style="cursor: pointer;"><i
+								class="fa fa-eye"></i></span>
+					</div>
+				</div>
+				<small id="passwordError">⚠ Passwords do not match</small>
+			</div>
+
+			<!-- MPIN -->
+			<div class="form-group mb-2">
+				<label>MPIN (4 Digit)</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fas fa-key"></i></span>
+					</div>
+					<input type="password" class="form-control" id="mpin" name="mpin" maxlength="4"
+						placeholder="Enter MPIN" required pattern="\d*" inputmode="numeric">
+					<div class="input-group-append">
+						<span class="input-group-text" id="toggleMpin" style="cursor: pointer;"><i
+								class="fa fa-eye"></i></span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Confirm MPIN -->
+			<div class="form-group mb-2">
+				<label>Confirm MPIN</label>
+				<div class="input-group">
+					<div class="input-group-prepend">
+						<span class="input-group-text"><i class="fas fa-key"></i></span>
+					</div>
+					<input type="password" class="form-control" id="confirmMpin" name="confirmMpin" maxlength="4"
+						placeholder="Confirm MPIN" required pattern="\d*" inputmode="numeric">
+					<div class="input-group-append">
+						<span class="input-group-text" id="toggleConfirmMpin" style="cursor: pointer;"><i
+								class="fa fa-eye"></i></span>
+					</div>
+				</div>
+				<small id="mpinError" style="color:red; display:none;">⚠ MPIN does not match</small>
+			</div>
+			<!-- Submit Button -->
+			<button type="submit" class="btn-register">Register</button>
+
+			<!-- Link to login page -->
+			<div class="text-link">
+				Already have an account? <a th:href="@{/login}">Login Here</a>
+			</div>
+		</form>
+	</div>
+
+	<!-- ==================== SUCCESS MODAL ==================== -->
+	<div id="successModal">
+		<div class="modal-content-success">
+			<span class="close-success" onclick="goToLogin()">×</span>
+			<h4>Success</h4>
+			<p>Owner Registration successful!</p>
+			<button class="success-btn" onclick="goToLogin()">OK</button>
+		</div>
+	</div>
+	<!-- ==================== MAIN SCRIPT (toggle, validation, success modal) ==================== -->
+	<script>
+		// ==================== TOGGLE PASSWORD VISIBILITY ====================
+		document.getElementById("togglePassword").onclick = function () {
+			let pass = document.getElementById("password");
+			this.querySelector("i").classList.toggle("fa-eye-slash");
+			pass.type = pass.type === "password" ? "text" : "password";
+		};
+
+		document.getElementById("toggleConfirmPassword").onclick = function () {
+			let pass = document.getElementById("confirmPassword");
+			this.querySelector("i").classList.toggle("fa-eye-slash");
+			pass.type = pass.type === "password" ? "text" : "password";
+		};
+
+		// ==================== TOGGLE MPIN VISIBILITY ====================
+		
+		document.getElementById("toggleMpin").onclick = function () {
+			let mp = document.getElementById("mpin");
+			this.querySelector("i").classList.toggle("fa-eye-slash");
+			mp.type = mp.type === "password" ? "text" : "password";
+		};
+
+		document.getElementById("toggleConfirmMpin").onclick = function () {
+			let mp = document.getElementById("confirmMpin");
+			this.querySelector("i").classList.toggle("fa-eye-slash");
+			mp.type = mp.type === "password" ? "text" : "password";
+		};
+
+
+ // ==================== ALLOW ONLY NUMBERS IN MPIN FIELDS ====================
+    document.getElementById("mpin").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, ''); // remove non-digits
+    });
+
+    document.getElementById("confirmMpin").addEventListener("input", function () {
+        this.value = this.value.replace(/\D/g, ''); // remove non-digits
+    });
+		// ==================== FORM VALIDATION ====================
+		function validateForm() {
+			let password = document.getElementById("password").value.trim();
+			let confirmPassword = document.getElementById("confirmPassword").value.trim();
+			let mpin = document.getElementById("mpin").value.trim();
+			let confirmMpin = document.getElementById("confirmMpin").value.trim();
+
+			// Password match check
+			if (password !== confirmPassword) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Password Mismatch',
+					text: 'Passwords do not match',
+					width: 400,              // wider popup
+					padding: '6px',
+					customClass: {
+						popup: 'swal-horizontal-popup',
+						title: 'swal-horizontal-title',
+						confirmButton: 'swal-small-btn'
+					}
+				});
+
+				return false;
+			}
+
+			// Password strength check
+			let passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,16}$/;
+			if (!passwordPattern.test(password)) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Weak Password',
+					html: '<small>Password must be 8-16 chars, include uppercase, lowercase, number & special character.</small>',
+					width: 400,
+					padding: '6px',
+					customClass: {
+						popup: 'swal-horizontal-popup',
+						title: 'swal-horizontal-title',
+						confirmButton: 'swal-small-btn'
+					}
+				});
+
+				return false;
+			}
+
+			// MPIN validation
+			if (mpin.length !== 4 || confirmMpin.length !== 4 || mpin !== confirmMpin) {
+				Swal.fire({
+					icon: 'error',
+					title: 'Invalid MPIN',
+					text: 'MPIN must be exactly 4 digits and match.',
+					width: 260,
+					padding: '8px',
+					customClass: {
+						popup: 'swal-custom-popup',
+						title: 'swal-custom-title',
+						confirmButton: 'swal-small-btn'
+					}
+				});
+				return false;
+			}
+
+			return true;
+		}
+
+
+
+		// ==================== REDIRECT TO LOGIN ====================
+		function goToLogin() {
+			window.location.href = '/login';
+		}
+
+		// ==================== SHOW SUCCESS MODAL ====================
+		window.onload = function () {
+			var isSuccess = /*[[${success}]]*/ false;
+			if (isSuccess) {
+				document.getElementById('successModal').style.display = 'block';
+			}
+		};
+	</script>
+
+	<!-- ==================== SweetAlert2 Library (keep this) ==================== -->
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+	<!-- ==================== FLASH ERROR POP-UP (Thymeleaf conditional) ==================== -->
+	<div th:if="${error}">
+		<script th:inline="javascript">
+			document.addEventListener("DOMContentLoaded", function () {
+				Swal.fire({
+					icon: 'error',
+					title: 'Duplicate!',
+					html: '<small>[[${error}]]</small>',
+					showCloseButton: true,
+					showConfirmButton: true,
+					confirmButtonText: 'OK',
+					confirmButtonColor: '#d33',
+
+					// Smaller Popup
+					width: 250,
+					padding: '6px',
+					iconColor: '#d33',
+					customClass: {
+						popup: 'swal-mini-popup',
+						title: 'swal-mini-title',
+						confirmButton: 'swal-mini-btn'
+					}
+				});
+			});
+		</script>
+	</div>
+
+	</div>
+
+</body>
+
+</html>

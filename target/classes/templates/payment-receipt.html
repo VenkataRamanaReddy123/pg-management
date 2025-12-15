@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Receipt</title>
+
+    <style>
+        /* ==================== PAGE STYLING ==================== */
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            padding: 25px;
+            background: #ffffff;
+            font-size: 13px;
+        }
+
+        /* ==================== RECEIPT CONTAINER ==================== */
+        .receipt-container {
+            max-width: 650px;
+            margin: auto;
+            border: 1px solid #777;
+            border-radius: 6px;
+            padding: 20px;
+            box-shadow: 0px 0px 5px #ccc;
+            position: relative;
+        }
+
+        /* ==================== HEADER ==================== */
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            text-align: center;
+            color: rgb(255, 0, 0);
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        /* ==================== TABLE STYLING ==================== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 7px;
+        }
+
+        table td,
+        table th {
+            padding: 6px 8px;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        table th {
+            text-align: left;
+            width: 150px;
+            color: #444;
+        }
+
+        /* ==================== FOOTER ==================== */
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #444;
+            margin-top: 20px;
+            border-top: 1px solid #bbb;
+            padding-top: 5px;
+        }
+
+        /* ==================== PAID WATERMARK ==================== */
+        .paid-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+            opacity: 0.12; /* Slightly visible but not disturbing */
+            width: 300px;   /* Adjusted for better fit */
+            pointer-events: none; /* Prevents any click issues */
+        }
+
+        /* ==================== RECEIPT ID BOX ==================== */
+        .receipt-id-box {
+            background: rgb(0, 128, 64);
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 13px;
+            width: fit-content;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="receipt-container">
+
+        <!-- ==================== PAID Watermark Placeholder ==================== -->
+        <!-- Optional: Can add <img class="paid-watermark" src="..."/> -->
+
+        <!-- ==================== HEADER ==================== -->
+        <div class="header">
+            <h2>PAYMENT RECEIPT</h2>
+            <p><strong>PG Name:</strong> <span th:text="${pgName}"></span></p>
+            <p><strong>Address:</strong> <span th:text="${pgAddress}"></span></p>
+            <p><small>Owner: <span th:text="${ownerName}"></span> |
+                    Ph: <span th:text="${ownerMobile}"></span> |
+                    Email: <span th:text="${ownerEmail}"></span></small></p>
+        </div>
+
+        <!-- ==================== RECEIPT ID ==================== -->
+        <div class="receipt-id-box">
+            Receipt ID: <span th:text="${receiptId}"></span>
+        </div>
+        <div style="clear:both;"></div>
+
+        <!-- ==================== CANDIDATE INFORMATION ==================== -->
+        <div class="section-title">Candidate Information</div>
+        <table>
+            <tr>
+                <th>Name</th>
+                <td th:text="${candidateName}"></td>
+            </tr>
+            <tr>
+                <th>Room No</th>
+                <td th:text="${roomNo}"></td>
+            </tr>
+        </table>
+
+        <!-- ==================== PAYMENT DETAILS ==================== -->
+        <div class="section-title">Payment Details</div>
+
+        <!-- ==================== PAID STAMP (Float Right) ==================== -->
+        <div th:if="${paymentStatus.equalsIgnoreCase('Paid')}"
+            style="float: right; margin-top: -20px; margin-right: 40px;">
+            <img th:src="@{'classpath:/static/images/paid_stamp.png'}" style="width: 180px; opacity:0.35;" />
+        </div>
+
+        <table>
+            <tr>
+                <th>Month</th>
+                <td th:text="${paymentMonth} + ' ' + ${paymentYear}"></td>
+            </tr>
+            <tr>
+                <th>Method</th>
+                <td th:text="${paymentMethod}"></td>
+            </tr>
+            <tr>
+                <th>Status</th>
+                <td th:text="${paymentStatus}"></td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td th:text="${paymentDate}"></td>
+            </tr>
+            <tr>
+                <th>Advance</th>
+                <td th:text="${advance}"></td>
+            </tr>
+            <tr>
+                <th>Paid</th>
+                <td th:text="${amountPaid}"></td>
+            </tr>
+            <tr>
+                <th>Balance</th>
+                <td th:text="${balance}"></td>
+            </tr>
+            <tr>
+                <th>Transaction ID</th>
+                <td th:text="${txnId}"></td>
+            </tr>
+        </table>
+
+        <!-- ==================== FOOTER ==================== -->
+        <div class="footer">
+            Generated on: <span th:text="${generatedOn}"></span><br>
+            <strong>Thank you!</strong>
+        </div>
+
+    </div>
+</body>
+
+</html>

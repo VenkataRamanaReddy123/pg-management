@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<title>Payment Options</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- Bootstrap -->
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+	<style>
+		body {
+			background: linear-gradient(135deg, #f0f2f5, #e0eafc);
+			font-family: 'Segoe UI', sans-serif;
+			padding: 20px;
+		}
+
+		.payment-container {
+			max-width: 450px;
+			margin: 50px auto;
+			background: #ffffff;
+			padding: 35px;
+			border-radius: 20px;
+			box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+			text-align: center;
+		}
+
+		.plan-title {
+			font-size: 28px;
+			font-weight: bold;
+			color: #4b0082;
+			margin-bottom: 10px;
+		}
+
+		.plan-price {
+			font-size: 32px;
+			color: #ff9800;
+			font-weight: bold;
+			margin-bottom: 25px;
+		}
+
+		.btn-payment {
+			width: 100%;
+			padding: 16px;
+			margin: 12px 0;
+			font-size: 18px;
+			border-radius: 12px;
+			font-weight: 600;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 12px;
+			cursor: pointer;
+			text-decoration: none;
+			color: white;
+			transition: all 0.3s ease;
+			box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+		}
+
+		.btn-payment img {
+			height: 32px;
+		}
+
+		.btn-razorpay { background: linear-gradient(135deg, #0f9d58, #4285f4); }
+		.btn-phonepe { background: linear-gradient(135deg, #673ab7, #9c27b0); }
+		.btn-gpay { background: linear-gradient(135deg, #4285f4, #34a853); }
+		.btn-paytm { background: linear-gradient(135deg, #00bcd4, #0097a7); }
+		.btn-cred { background: linear-gradient(135deg, #ff0040, #ff3366); }
+
+		.btn-payment:hover {
+			transform: translateY(-3px);
+			opacity: 0.9;
+		}
+	</style>
+</head>
+
+<body>
+
+	<div class="payment-container">
+
+		<div class="plan-title">Standard Plan</div>
+		<div class="plan-price">₹399 / Year</div>
+
+		<p>Select a payment method:</p>
+
+		<!-- Razorpay Button -->
+		<button id="rzpButton" class="btn-payment btn-razorpay">
+			<img src="images/Rozopay.png">
+			Pay Securely (Razorpay UPI / Card / Wallet)
+		</button>
+
+	</div>
+
+	<!-- Razorpay Script -->
+	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+	<script>
+		// Pre-fill data from Thymeleaf session variables
+		const ownerName = /*[[${session.ownerName}]]*/ 'Owner';
+		const ownerEmail = /*[[${session.ownerEmail}]]*/ 'owner@example.com';
+		const ownerMobile = /*[[${session.ownerMobile}]]*/ '9999999999';
+
+		document.getElementById("rzpButton").onclick = function () {
+			fetch("/createOrder", { method: "POST" })
+				.then(res => res.json())
+				.then(data => {
+
+					let options = {
+						"key": data.razorpayKeyId,
+						"amount": data.amount,
+						"currency": "INR",
+						"name": "PG App Subscription",
+						"description": "Standard Yearly Plan",
+						"order_id": data.orderId,
+
+						"prefill": {
+							"name": ownerName,
+							"email": ownerEmail,
+							"contact": ownerMobile
+						},
+
+						"handler": function (response) {
+							window.location.href = "/payment/success";
+						},
+
+						"theme": { "color": "#4b0082" }
+					};
+
+					let rzp = new Razorpay(options);
+					rzp.open();
+				});
+		};
+	</script>
+
+</body>
+</html>
