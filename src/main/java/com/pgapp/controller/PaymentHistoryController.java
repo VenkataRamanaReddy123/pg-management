@@ -310,6 +310,4 @@ public class PaymentHistoryController {
 
         return "redirect:" + redirectUrl + "&success=true";
     }
-
-
 }
