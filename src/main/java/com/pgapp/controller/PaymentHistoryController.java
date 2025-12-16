@@ -152,21 +152,23 @@ public class PaymentHistoryController {
         Map<Long, PaymentHistory> paymentMap = new HashMap<>();
 
         for (Candidate c : candidates) {
-            PaymentHistory ph = paymentHistoryRepository
-                    .findByCandidate_CandidateIdAndPaymentMonthAndPaymentYear(c.getCandidateId(), m, y)
-                    .orElseGet(() -> {
-                        PaymentHistory newPh = new PaymentHistory();
-                        newPh.setCandidate(c);
-                        newPh.setPg(c.getPg());
-                        newPh.setPaymentMonth(m);
-                        newPh.setPaymentYear(y);
-                        newPh.setStatus(PaymentStatus.PENDING);
-                        newPh.setPaymentMethod(PaymentMethod.CASH);
-                        return paymentHistoryRepository.save(newPh);
-                    });
 
-            paymentMap.put(c.getCandidateId(), ph);
+            Optional<PaymentHistory> phOpt =
+                    paymentHistoryRepository
+                            .findByCandidate_CandidateIdAndPaymentMonthAndPaymentYear(
+                                    c.getCandidateId(), m, y
+                            );
+
+            // If payment exists → use it
+            if (phOpt.isPresent()) {
+                paymentMap.put(c.getCandidateId(), phOpt.get());
+            }
+            // If payment does NOT exist → show as PENDING (no DB insert)
+            else {
+                paymentMap.put(c.getCandidateId(), null);
+            }
         }
+
 
         model.addAttribute("candidates", candidates);
         model.addAttribute("paymentMap", paymentMap);
@@ -176,7 +178,6 @@ public class PaymentHistoryController {
         long paidCount = paymentMap.values().stream()
                 .filter(p -> p != null && p.getStatus() == PaymentStatus.PAID)
                 .count();
-
         long partialCount = paymentMap.values().stream()
                 .filter(p -> p != null && p.getStatus() == PaymentStatus.PARTIAL_PAID)
                 .count();
