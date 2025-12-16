@@ -78,6 +78,12 @@
 			<version>1.4.6</version>
 		</dependency>
 
+<!-- SendGrid Email -->
+<dependency>
+    <groupId>com.sendgrid</groupId>
+    <artifactId>sendgrid-java</artifactId>
+    <version>4.10.2</version>
+</dependency>
 
 		<!-- Spring Boot Mail Starter -->
 		<dependency>
