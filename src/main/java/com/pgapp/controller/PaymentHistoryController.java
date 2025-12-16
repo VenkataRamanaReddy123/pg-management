@@ -226,41 +226,62 @@ public class PaymentHistoryController {
             @RequestParam(required = false) String roomNo
     ) {
 
-        // 🔹 Fetch existing payment record or create new
-        PaymentHistory payment = paymentHistoryRepository
-                .findByCandidate_CandidateIdAndPg_IdAndPaymentMonthAndPaymentYear(candidateId, pgId, month, year)
-                .orElse(new PaymentHistory());
-
+        // 🔹 Fetch candidate & PG (MANDATORY – prevent FK null)
         Candidate candidate = candidateRepo.findById(candidateId).orElse(null);
         Pg pg = pgRepo.findById(pgId).orElse(null);
 
-        payment.setCandidate(candidate);
-        payment.setPg(pg);
-        payment.setPaymentMonth(month);
-        payment.setPaymentYear(year);
-
-        // 🔹 Set room number from candidate or request parameter
-        if (candidate != null && candidate.getRoomNo() != null) {
-            payment.setRoomNo(candidate.getRoomNo());
-        } else if (roomNo != null && !roomNo.isBlank()) {
-            payment.setRoomNo(roomNo);
+        if (candidate == null || pg == null) {
+            return "redirect:/payments/history?pgId=" + pgId + "&month=" + month + "&year=" + year + "&error=invalid";
         }
 
-        // 🔹 Set payment method if provided
+        // 🔹 Fetch existing payment or create new (SAFE)
+        PaymentHistory payment = paymentHistoryRepository
+                .findByCandidate_CandidateIdAndPg_IdAndPaymentMonthAndPaymentYear(
+                        candidateId, pgId, month, year)
+                .orElseGet(() -> {
+                    PaymentHistory p = new PaymentHistory();
+                    p.setCandidate(candidate);
+                    p.setPg(pg);
+                    p.setPaymentMonth(month);
+                    p.setPaymentYear(year);
+
+                    // 🔴 REQUIRED DB FIELDS
+                    p.setRoomNo(
+                            candidate.getRoomNo() != null && !candidate.getRoomNo().isBlank()
+                                    ? candidate.getRoomNo()
+                                    : (roomNo != null && !roomNo.isBlank() ? roomNo : "NA")
+                    );
+                    p.setPaymentMethod(PaymentMethod.CASH);
+                    p.setStatus(PaymentStatus.PENDING);
+                    p.setAdvance(0.0);
+                    p.setAmountPaid(0.0);
+                    p.setBalance(0.0);
+
+                    return p;
+                });
+
+        // 🔹 Room number (ensure NOT NULL)
+        if (payment.getRoomNo() == null || payment.getRoomNo().isBlank()) {
+            payment.setRoomNo(
+                    candidate.getRoomNo() != null && !candidate.getRoomNo().isBlank()
+                            ? candidate.getRoomNo()
+                            : (roomNo != null && !roomNo.isBlank() ? roomNo : "NA")
+            );
+        }
+
+        // 🔹 Payment method
         if (method != null && !method.isBlank()) {
             try {
                 payment.setPaymentMethod(PaymentMethod.valueOf(method));
-            } catch (Exception ex) {
-                // ignore invalid enum
-            }
+            } catch (Exception ignored) {}
         }
 
-        // 🔹 Set amounts, defaulting to 0.0 if null
+        // 🔹 Amounts (NOT NULL)
         payment.setAdvance(advance != null ? advance : 0.0);
         payment.setAmountPaid(amountPaid != null ? amountPaid : 0.0);
         payment.setBalance(balance != null ? balance : 0.0);
 
-        // 🔹 Set payment status, defaulting to PENDING if invalid
+        // 🔹 Payment status
         if (status != null && !status.isBlank()) {
             try {
                 payment.setStatus(PaymentStatus.valueOf(status));
@@ -269,19 +290,19 @@ public class PaymentHistoryController {
             }
         }
 
-        // 🔹 Set payment date if provided
+        // 🔹 Payment date
         if (paymentDate != null) {
             payment.setPaymentDate(paymentDate);
         }
 
-        // 🔹 Set transaction and receipt IDs, default to empty string if null
+        // 🔹 Transaction & receipt IDs
         payment.setTransactionId(transactionId != null ? transactionId : "");
         payment.setReceiptId(receiptId != null ? receiptId : "");
 
-        // 🔹 Save payment record
+        // 🔹 SAVE (single save – safe)
         paymentHistoryRepository.save(payment);
 
-        // 🔹 Redirect back to history page with current filters
+        // 🔹 Redirect back with filters
         String redirectUrl = "/payments/history?pgId=" + pgId + "&month=" + month + "&year=" + year;
         if (roomNo != null && !roomNo.isBlank()) {
             redirectUrl += "&roomNo=" + roomNo;
@@ -289,5 +310,6 @@ public class PaymentHistoryController {
 
         return "redirect:" + redirectUrl + "&success=true";
     }
+
 
 }
