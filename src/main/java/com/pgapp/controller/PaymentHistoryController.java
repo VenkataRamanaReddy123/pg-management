@@ -165,8 +165,28 @@ public class PaymentHistoryController {
             }
             // If payment does NOT exist → show as PENDING (no DB insert)
             else {
-                paymentMap.put(c.getCandidateId(), null);
+                PaymentHistory temp = new PaymentHistory();
+                temp.setCandidate(c);
+                temp.setPg(selectedPg);
+                temp.setPaymentMonth(m);
+                temp.setPaymentYear(y);
+
+                // 🔒 ABSOLUTE REQUIRED DEFAULTS
+                temp.setRoomNo(
+                    c.getRoomNo() != null && !c.getRoomNo().isBlank()
+                        ? c.getRoomNo()
+                        : "NA"
+                );
+                temp.setPaymentMethod(PaymentMethod.CASH);
+                temp.setStatus(PaymentStatus.PENDING);
+                temp.setAdvance(0.0);
+                temp.setAmountPaid(0.0);
+                temp.setBalance(0.0);
+
+                // ❗ DO NOT SAVE — ONLY FOR UI
+                paymentMap.put(c.getCandidateId(), temp);
             }
+
         }
 
 
