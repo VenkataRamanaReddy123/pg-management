@@ -1,19 +1,13 @@
-# Maven
-/target/
-!.mvn/wrapper/maven-wrapper.jar
+# Maven / Gradle
+target/
+*.class
 
-# Uploads & temp files
-/uploads/
-*.log
-
-# IDE files
-/.idea/
-/.vscode/
+# IDE
+.idea/
 *.iml
+.classpath
+.project
+.settings/
 
-# OS files
+# OS
 .DS_Store
-Thumbs.db
-
-# Environment files
-.env
