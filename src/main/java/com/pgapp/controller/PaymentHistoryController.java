@@ -4,7 +4,6 @@ import com.pgapp.model.*;
 import com.pgapp.repository.CandidateRepository;
 import com.pgapp.repository.PaymentHistoryRepository;
 import com.pgapp.repository.PgRepository;
-import com.pgapp.service.PaymentHistoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
@@ -22,14 +21,12 @@ import java.util.*;
 @RequestMapping("/payments")
 public class PaymentHistoryController {
 
-    @Autowired
-    private PaymentHistoryService paymentHistoryService;
+  
 
     @Autowired
     private PaymentHistoryRepository paymentHistoryRepository;
 
-    @Autowired
-    private PaymentHistoryRepository paymentRepo;
+   
 
     @Autowired
     private PgRepository pgRepo;
@@ -155,7 +152,7 @@ public class PaymentHistoryController {
         Map<Long, PaymentHistory> paymentMap = new HashMap<>();
 
         for (Candidate c : candidates) {
-            PaymentHistory ph = paymentRepo
+            PaymentHistory ph = paymentHistoryRepository
                     .findByCandidate_CandidateIdAndPaymentMonthAndPaymentYear(c.getCandidateId(), m, y)
                     .orElseGet(() -> {
                         PaymentHistory newPh = new PaymentHistory();
@@ -165,7 +162,7 @@ public class PaymentHistoryController {
                         newPh.setPaymentYear(y);
                         newPh.setStatus(PaymentStatus.PENDING);
                         newPh.setPaymentMethod(PaymentMethod.CASH);
-                        return newPh;
+                        return paymentHistoryRepository.save(newPh);
                     });
 
             paymentMap.put(c.getCandidateId(), ph);
@@ -230,7 +227,7 @@ public class PaymentHistoryController {
     ) {
 
         // 🔹 Fetch existing payment record or create new
-        PaymentHistory payment = paymentRepo
+        PaymentHistory payment = paymentHistoryRepository
                 .findByCandidate_CandidateIdAndPg_IdAndPaymentMonthAndPaymentYear(candidateId, pgId, month, year)
                 .orElse(new PaymentHistory());
 
@@ -282,7 +279,7 @@ public class PaymentHistoryController {
         payment.setReceiptId(receiptId != null ? receiptId : "");
 
         // 🔹 Save payment record
-        paymentRepo.save(payment);
+        paymentHistoryRepository.save(payment);
 
         // 🔹 Redirect back to history page with current filters
         String redirectUrl = "/payments/history?pgId=" + pgId + "&month=" + month + "&year=" + year;

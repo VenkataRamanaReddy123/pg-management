@@ -626,7 +626,8 @@
 
 <body>
 	<div class="container mt-4">
-		<div class="" page-wrapper"">
+		<div class="page-wrapper">
+
 			<!-- Header -->
 			<div class="d-flex justify-content-between align-items-center mb-3">
 				<h3>
@@ -826,32 +827,26 @@
 							</td>
 
 							<!-- Email Receipt -->
-							<td class="text-center">
-								<form th:action="@{/payments/send-receipt}" method="post" class="email-receipt-form"
-									style="margin:0;">
-									<input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
-									<input type="hidden" name="pgId" th:value="${selectedPg.id}" />
-									<input type="hidden" name="month" th:value="${selectedMonth}" />
-									<input type="hidden" name="year" th:value="${selectedYear}" />
-									<input type="hidden" name="roomNo" th:value="${roomNo}" /> <!-- ✅ add this -->
-									<!-- MUST ADD THESE TWO -->
-									<input type="hidden" name="txnId" class="hidden-txn" />
-									<input type="hidden" name="receiptId" class="hidden-receipt" />
+<td class="text-center">
+    <form th:action="@{/payments/send-receipt}" method="post" class="email-receipt-form"
+          style="margin:0;">
+        
+        <input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
+        <input type="hidden" name="pgId" th:value="${selectedPg.id}" />
+        <input type="hidden" name="month" th:value="${selectedMonth}" />
+        <input type="hidden" name="year" th:value="${selectedYear}" />
+        <input type="hidden" name="roomNo" th:value="${roomNo}" />
 
-									<input type="hidden" name="paymentMethod"
-										th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].paymentMethod : ''}" />
-									<input type="hidden" name="paymentStatus"
-										th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].status : ''}" />
-									<input type="hidden" name="paymentDate"
-										th:value="${paymentMap[candidate.candidateId] != null ? #temporals.format(paymentMap[candidate.candidateId].paymentDate, 'yyyy-MM-dd') : ''}" />
+        <button type="submit"
+                class="btn btn-sm btn-success send-receipt-btn"
+                th:disabled="${paymentMap[candidate.candidateId] == null
+                  || paymentMap[candidate.candidateId].status.name()
+                  != T(com.pgapp.model.PaymentStatus).PAID.name()}">
+            <i class="fas fa-envelope"></i> Receipt
+        </button>
+    </form>
+</td>
 
-									<button type="submit" class="btn btn-sm btn-success send-receipt-btn" th:disabled="${paymentMap[candidate.candidateId] == null
-             || paymentMap[candidate.candidateId].status.name() != T(com.pgapp.model.PaymentStatus).PAID.name()}">
-										<i class="fas fa-envelope"></i> Receipt
-									</button>
-								</form>
-
-							</td>
 
 						</tr>
 					</tbody>
@@ -1149,17 +1144,9 @@
 			window.history.replaceState({}, document.title, url.toString());
 		}
 
-		// ======================================================
-		// SEND RECEIPT FORM (EMAIL)
-		// ======================================================
-		$(".send-receipt-btn").on("click", function () {
-			const $row = $(this).closest("tr");
-			const txn = $row.find(".visible-txn").val();
-			const receipt = $row.find(".visible-receipt").val();
-
-			$row.find(".hidden-txn").val(txn);
-			$row.find(".hidden-receipt").val(receipt);
-		});
+	function filterRoom() {
+    document.querySelector(".search-bar-row").submit();
+}
 
 	</script>
 
