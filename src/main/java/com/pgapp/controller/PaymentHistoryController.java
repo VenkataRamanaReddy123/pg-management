@@ -182,7 +182,7 @@ public class PaymentHistoryController {
                 .count();
 
         long pendingCount = total - paidCount - partialCount;
-
+System.out.println(pendingCount);
         model.addAttribute("totalCandidates", total);
         model.addAttribute("paidCandidates", paidCount);
         model.addAttribute("partialCandidates", partialCount);
