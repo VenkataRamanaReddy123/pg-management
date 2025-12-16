@@ -193,14 +193,23 @@ System.out.println(pendingCount);
         // 🔢 NEW MONTHLY AMOUNT SUMMARY (Advance / Paid / Balance)
         // ============================================================
         if (selectedPg != null) {
-            Double totalAdvance = paymentHistoryRepository.getTotalAdvanceAmount(selectedPg, month, year);
-            Double totalPaid = paymentHistoryRepository.getTotalAmountPaid(selectedPg, month, year);
-            Double totalBalance = paymentHistoryRepository.getTotalBalanceAmount(selectedPg, month, year);
+            Double totalAdvance = Optional
+                    .ofNullable(paymentHistoryRepository.getTotalAdvanceAmount(selectedPg, month, year))
+                    .orElse(0.0);
+
+            Double totalPaid = Optional
+                    .ofNullable(paymentHistoryRepository.getTotalAmountPaid(selectedPg, month, year))
+                    .orElse(0.0);
+
+            Double totalBalance = Optional
+                    .ofNullable(paymentHistoryRepository.getTotalBalanceAmount(selectedPg, month, year))
+                    .orElse(0.0);
 
             model.addAttribute("totalAdvanceAmount", totalAdvance);
             model.addAttribute("totalPaidAmount", totalPaid);
             model.addAttribute("totalBalanceAmount", totalBalance);
         }
+
 
         return "payment-history";
     }
@@ -300,6 +309,10 @@ System.out.println(pendingCount);
         payment.setTransactionId(transactionId != null ? transactionId : "");
         payment.setReceiptId(receiptId != null ? receiptId : "");
 
+     // 🚨 FINAL GUARANTEE — room_no MUST NEVER be null
+        if (payment.getRoomNo() == null || payment.getRoomNo().isBlank()) {
+            payment.setRoomNo("NA");
+        }
         // 🔹 SAVE (single save – safe)
         paymentHistoryRepository.save(payment);
 
