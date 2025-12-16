@@ -197,4 +197,34 @@ public class PaymentHistory {
     public void setReceiptId(String receiptId) {
         this.receiptId = receiptId;
     }
+    
+    @PrePersist
+    @PreUpdate
+    private void prePersistUpdate() {
+
+        // 🔒 room_no MUST NEVER be null
+        if (this.roomNo == null || this.roomNo.isBlank()) {
+            this.roomNo = "NA";
+        }
+
+        // 🔒 payment_method MUST NEVER be null
+        if (this.paymentMethod == null) {
+            this.paymentMethod = PaymentMethod.CASH;
+        }
+
+        // 🔒 status MUST NEVER be null
+        if (this.status == null) {
+            this.status = PaymentStatus.PENDING;
+        }
+
+        // 🔒 amounts MUST NEVER be null
+        if (this.advance == null) this.advance = 0.0;
+        if (this.amountPaid == null) this.amountPaid = 0.0;
+        if (this.balance == null) this.balance = 0.0;
+        // 🔒 timestamps
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        this.updatedAt = LocalDateTime.now();
+    }
 }
