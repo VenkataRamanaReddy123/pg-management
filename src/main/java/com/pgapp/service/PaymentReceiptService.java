@@ -29,7 +29,7 @@ public class PaymentReceiptService {
 
     /**
      * 🔹 Generate PDF from Thymeleaf template
-     * 
+     *     
      * @param candidateName  Name of the candidate
      * @param roomNo         Room number of candidate
      * @param pgName         PG name

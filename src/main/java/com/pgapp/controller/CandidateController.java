@@ -116,22 +116,21 @@ public class CandidateController {
 
         candidate.setPg(pg);
 
-        // ------------------ 🔴 CRITICAL FIX (GLOBAL) ------------------
-        // Guarantees DB safety for ADD + UPDATE
+        // ------------------ ROOM NO SAFETY ------------------
         if (candidate.getRoomNo() == null || candidate.getRoomNo().isBlank()) {
             candidate.setRoomNo("NA");
         }
 
-        // ------------------ FILES ARE MANDATORY ------------------
-        if (photoFile.isEmpty() || idProofFile.isEmpty()) {
-            model.addAttribute("error", "Photo and ID Proof are mandatory");
-            model.addAttribute("candidate", candidate);
-            model.addAttribute("pgs", pgRepo.findByOwnerIdAndDeletedFalse(ownerId));
-            return candidate.getCandidateId() == null ? "candidate-register" : "candidate-edit";
-        }
-
         // ------------------ ADD NEW CANDIDATE ------------------
         if (candidate.getCandidateId() == null) {
+
+            // Files mandatory ONLY for ADD
+            if (photoFile.isEmpty() || idProofFile.isEmpty()) {
+                model.addAttribute("error", "Photo and ID Proof are mandatory");
+                model.addAttribute("candidate", candidate);
+                model.addAttribute("pgs", pgRepo.findByOwnerIdAndDeletedFalse(ownerId));
+                return "candidate-register";
+            }
 
             // Default joining date
             if (candidate.getJoiningDate() == null) {
@@ -142,7 +141,6 @@ public class CandidateController {
                 );
             }
 
-            // Mandatory files
             candidate.setPhoto(photoFile.getBytes());
             candidate.setIdProof(idProofFile.getBytes());
 
@@ -165,7 +163,6 @@ public class CandidateController {
             existing.setGuardianMobile(candidate.getGuardianMobile());
             existing.setPg(candidate.getPg());
 
-            // 🔴 SAFE roomNo update (NO NULL OVERWRITE)
             if (candidate.getRoomNo() != null && !candidate.getRoomNo().isBlank()) {
                 existing.setRoomNo(candidate.getRoomNo());
             }
@@ -174,9 +171,14 @@ public class CandidateController {
                 existing.setJoiningDate(candidate.getJoiningDate());
             }
 
-            // Mandatory files (always overwrite)
-            existing.setPhoto(photoFile.getBytes());
-            existing.setIdProof(idProofFile.getBytes());
+            // ✅ FILES OPTIONAL FOR UPDATE
+            if (photoFile != null && !photoFile.isEmpty()) {
+                existing.setPhoto(photoFile.getBytes());
+            }
+
+            if (idProofFile != null && !idProofFile.isEmpty()) {
+                existing.setIdProof(idProofFile.getBytes());
+            }
 
             candidateRepo.save(existing);
             redirectAttributes.addFlashAttribute("success", "Candidate details updated successfully!");
