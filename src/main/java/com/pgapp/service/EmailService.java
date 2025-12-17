@@ -1,14 +1,14 @@
 package com.pgapp.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
 import com.sendgrid.Method;
 import com.sendgrid.Request;
 import com.sendgrid.SendGrid;
 import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Content;
 import com.sendgrid.helpers.mail.objects.Email;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 
@@ -38,24 +38,22 @@ public class EmailService {
             return;
         }
 
-        Email from = new Email(fromEmail);
-        Email toEmail = new Email(to);
-        Content content = new Content("text/plain", body);
-        Mail mail = new Mail(from, subject, toEmail, content);
-
-        SendGrid sg = new SendGrid(sendGridApiKey);
-        Request request = new Request();
-
         try {
+            Email from = new Email(fromEmail);
+            Email toEmail = new Email(to);
+            Content content = new Content("text/plain", body);
+            Mail mail = new Mail(from, subject, toEmail, content);
+
+            SendGrid sg = new SendGrid(sendGridApiKey);
+            Request request = new Request();
             request.setMethod(Method.POST);
             request.setEndpoint("mail/send");
             request.setBody(mail.build());
-            sg.api(request);
 
+            sg.api(request);
             System.out.println("✅ Email sent to: " + to);
 
         } catch (IOException e) {
-            // ❌ Never crash the app
             System.err.println("❌ Email failed to: " + to);
             e.printStackTrace();
         }
@@ -144,16 +142,12 @@ public class EmailService {
     // HELPERS
     // =====================================================
     private String maskPassword(String password) {
-        if (password == null || password.length() < 4) {
-            return "********";
-        }
+        if (password == null || password.length() < 4) return "********";
         return password.substring(0, 2) + "****" + password.substring(password.length() - 2);
     }
 
     private String maskMpin(String mpin) {
-        if (mpin == null || mpin.length() != 4) {
-            return "****";
-        }
+        if (mpin == null || mpin.length() != 4) return "****";
         return mpin.charAt(0) + "**" + mpin.charAt(3);
     }
 }

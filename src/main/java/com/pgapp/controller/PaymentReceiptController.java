@@ -162,14 +162,11 @@ public class PaymentReceiptController {
 
             redirectAttrs.addAttribute("receiptSent", "true");
 
-        } catch (MessagingException e) {
-            e.printStackTrace();
-            redirectAttrs.addAttribute("receiptSent", "false");
         } catch (Exception e) {
             e.printStackTrace();
             redirectAttrs.addAttribute("receiptSent", "false");
-        }
-
+        } 
+        
         // --------------------------------------------------
         // 8️⃣ Redirect back (preserve filters)
         // --------------------------------------------------
