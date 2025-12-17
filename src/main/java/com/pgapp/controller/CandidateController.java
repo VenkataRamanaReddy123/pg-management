@@ -95,77 +95,88 @@ public class CandidateController {
                                 RedirectAttributes redirectAttributes,
                                 Model model) throws IOException {
 
-        // Validate login session
+        // ------------------ SESSION VALIDATION ------------------
         Long ownerId = (Long) session.getAttribute("ownerId");
-        if (ownerId == null)
-            return "redirect:/login";
+        if (ownerId == null) return "redirect:/login";
 
-        // Validate PG selection
-        Pg pg = null;
+        // ------------------ PG VALIDATION ------------------
+        Pg pg;
         if (selectedPgId != null) {
-            pg = pgRepo.findById(selectedPgId).orElseThrow(() -> new IllegalArgumentException("Selected PG not found!"));
+            pg = pgRepo.findById(selectedPgId)
+                    .orElseThrow(() -> new IllegalArgumentException("Selected PG not found"));
         } else if (candidate.getPg() != null && candidate.getPg().getId() != null) {
-            pg = pgRepo.findById(candidate.getPg().getId()).orElseThrow(() -> new IllegalArgumentException("Selected PG not found!"));
+            pg = pgRepo.findById(candidate.getPg().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("Selected PG not found"));
         } else {
-            // Handle error when PG not selected
-            model.addAttribute("error", "Please select a PG for the candidate.");
+            model.addAttribute("error", "Please select a PG");
             model.addAttribute("candidate", candidate);
             model.addAttribute("pgs", pgRepo.findByOwnerIdAndDeletedFalse(ownerId));
-            model.addAttribute("maxDate", new java.text.SimpleDateFormat("yyyy-MM-dd").format(new Date()));
-
-            return candidate.getCandidateId() != null ? "candidate-edit" : "candidate-register";
+            return candidate.getCandidateId() == null ? "candidate-register" : "candidate-edit";
         }
 
-        // Assign PG to candidate
         candidate.setPg(pg);
 
-        // ------------------- ADD NEW CANDIDATE -------------------
+        // ------------------ 🔴 CRITICAL FIX (GLOBAL) ------------------
+        // Guarantees DB safety for ADD + UPDATE
+        if (candidate.getRoomNo() == null || candidate.getRoomNo().isBlank()) {
+            candidate.setRoomNo("NA");
+        }
+
+        // ------------------ FILES ARE MANDATORY ------------------
+        if (photoFile.isEmpty() || idProofFile.isEmpty()) {
+            model.addAttribute("error", "Photo and ID Proof are mandatory");
+            model.addAttribute("candidate", candidate);
+            model.addAttribute("pgs", pgRepo.findByOwnerIdAndDeletedFalse(ownerId));
+            return candidate.getCandidateId() == null ? "candidate-register" : "candidate-edit";
+        }
+
+        // ------------------ ADD NEW CANDIDATE ------------------
         if (candidate.getCandidateId() == null) {
 
-            // Default joining date if empty
+            // Default joining date
             if (candidate.getJoiningDate() == null) {
-                candidate.setJoiningDate(Date.from(LocalDate.now().atStartOfDay(ZoneId.systemDefault()).toInstant()));
+                candidate.setJoiningDate(
+                    Date.from(LocalDate.now()
+                        .atStartOfDay(ZoneId.systemDefault())
+                        .toInstant())
+                );
             }
 
-            // Save photo
-            if (!photoFile.isEmpty()) {
-                candidate.setPhoto(photoFile.getBytes());
-            }
-
-            // Save ID proof
-            if (!idProofFile.isEmpty()) {
-                candidate.setIdProof(idProofFile.getBytes());
-            }
+            // Mandatory files
+            candidate.setPhoto(photoFile.getBytes());
+            candidate.setIdProof(idProofFile.getBytes());
 
             candidateRepo.save(candidate);
             redirectAttributes.addFlashAttribute("success", "Candidate added successfully!");
         }
 
-        // ------------------- UPDATE EXISTING CANDIDATE -------------------
+        // ------------------ UPDATE EXISTING CANDIDATE ------------------
         else {
             Candidate existing = candidateRepo.findById(candidate.getCandidateId())
                     .orElseThrow(() -> new IllegalArgumentException("Candidate not found"));
 
-            // Update all editable fields
             existing.setName(candidate.getName());
             existing.setGender(candidate.getGender());
             existing.setAge(candidate.getAge());
             existing.setDob(candidate.getDob());
             existing.setMobile(candidate.getMobile());
             existing.setEmail(candidate.getEmail());
-            existing.setRoomNo(candidate.getRoomNo());
             existing.setAadhaar(candidate.getAadhaar());
-
-            // Only update joining date if supplied
-            if (candidate.getJoiningDate() != null)
-                existing.setJoiningDate(candidate.getJoiningDate());
-
             existing.setGuardianMobile(candidate.getGuardianMobile());
             existing.setPg(candidate.getPg());
 
-            // Update photos if uploaded
-            if (!photoFile.isEmpty()) existing.setPhoto(photoFile.getBytes());
-            if (!idProofFile.isEmpty()) existing.setIdProof(idProofFile.getBytes());
+            // 🔴 SAFE roomNo update (NO NULL OVERWRITE)
+            if (candidate.getRoomNo() != null && !candidate.getRoomNo().isBlank()) {
+                existing.setRoomNo(candidate.getRoomNo());
+            }
+
+            if (candidate.getJoiningDate() != null) {
+                existing.setJoiningDate(candidate.getJoiningDate());
+            }
+
+            // Mandatory files (always overwrite)
+            existing.setPhoto(photoFile.getBytes());
+            existing.setIdProof(idProofFile.getBytes());
 
             candidateRepo.save(existing);
             redirectAttributes.addFlashAttribute("success", "Candidate details updated successfully!");
@@ -173,6 +184,7 @@ public class CandidateController {
 
         return "redirect:/candidates/list?pgId=" + pg.getId();
     }
+
 
     // --------------------------- LIST CANDIDATES ---------------------------
     @GetMapping("/list")
