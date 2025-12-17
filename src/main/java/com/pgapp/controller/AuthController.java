@@ -28,7 +28,8 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.Random;
-
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 @Controller
 public class AuthController {
 
@@ -154,18 +155,23 @@ public class AuthController {
 
 	// ✅ Helper method to set cookies
 	private void setCookies(Owner owner, HttpServletResponse response) {
-		Cookie nameCookie = new Cookie("ownerName", owner.getOwnerName());
-		nameCookie.setHttpOnly(false);
-		nameCookie.setPath("/");
-		nameCookie.setMaxAge(24 * 60 * 60);
-		response.addCookie(nameCookie);
 
-		Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
-		idCookie.setHttpOnly(false);
-		idCookie.setPath("/");
-		idCookie.setMaxAge(24 * 60 * 60);
-		response.addCookie(idCookie);
+	    String safeOwnerName = URLEncoder.encode(
+	            owner.getOwnerName(), StandardCharsets.UTF_8);
+
+	    Cookie nameCookie = new Cookie("ownerName", safeOwnerName);
+	    nameCookie.setHttpOnly(false);
+	    nameCookie.setPath("/");
+	    nameCookie.setMaxAge(24 * 60 * 60);
+	    response.addCookie(nameCookie);
+
+	    Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
+	    idCookie.setHttpOnly(false);
+	    idCookie.setPath("/");
+	    idCookie.setMaxAge(24 * 60 * 60);
+	    response.addCookie(idCookie);
 	}
+
 
 	// =====================================================================
 	// LOGOUT
@@ -178,29 +184,42 @@ public class AuthController {
 	@GetMapping("/logout")
 	public String logout(HttpSession session, HttpServletResponse response) {
 
-		Long ownerId = (Long) session.getAttribute("ownerId");
-		Owner owner = ownerId != null ? ownerRepo.findById(ownerId).orElse(null) : null;
+	    // 1️⃣ Get owner from session BEFORE invalidating
+	    Long ownerId = (Long) session.getAttribute("ownerId");
+	    Owner owner = null;
 
-		// Clear session data
-		session.invalidate();
+	    if (ownerId != null) {
+	        owner = ownerRepo.findById(ownerId).orElse(null);
+	    }
 
-		// Create cookies again for login page display
-		if (owner != null) {
-			Cookie nameCookie = new Cookie("ownerName", owner.getOwnerName());
-			nameCookie.setHttpOnly(false);
-			nameCookie.setPath("/");
-			nameCookie.setMaxAge(24 * 60 * 60);
-			response.addCookie(nameCookie);
+	    // 2️⃣ Clear session completely
+	    session.invalidate();
 
-			Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
-			idCookie.setHttpOnly(false);
-			idCookie.setPath("/");
-			idCookie.setMaxAge(24 * 60 * 60);
-			response.addCookie(idCookie);
-		}
+	    // 3️⃣ Re-create cookies ONLY for login page display
+	    if (owner != null) {
 
-		return "redirect:/login";
+	        // ✅ Encode owner name to avoid spaces / invalid cookie characters
+	        String safeOwnerName = java.net.URLEncoder.encode(
+	                owner.getOwnerName(), java.nio.charset.StandardCharsets.UTF_8
+	        );
+
+	        Cookie nameCookie = new Cookie("ownerName", safeOwnerName);
+	        nameCookie.setHttpOnly(false);
+	        nameCookie.setPath("/");
+	        nameCookie.setMaxAge(24 * 60 * 60); // 1 day
+	        response.addCookie(nameCookie);
+
+	        Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
+	        idCookie.setHttpOnly(false);
+	        idCookie.setPath("/");
+	        idCookie.setMaxAge(24 * 60 * 60); // 1 day
+	        response.addCookie(idCookie);
+	    }
+
+	    // 4️⃣ Redirect back to login
+	    return "redirect:/login";
 	}
+
 
 	// =====================================================================
 	// REGISTRATION SECTION
