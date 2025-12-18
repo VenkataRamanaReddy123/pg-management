@@ -60,7 +60,20 @@ public class SubscriptionController {
     }
 
     @GetMapping("/payment")
-    public String showPaymentOptions() {
+    public String showPaymentOptions(HttpSession session) {
+
+        Long ownerId = (Long) session.getAttribute("ownerId");
+        if (ownerId == null) {
+            return "redirect:/login";
+        }
+
+        Owner owner = ownerRepository.findById(ownerId).orElse(null);
+        if (owner != null) {
+            session.setAttribute("ownerName", owner.getOwnerName());
+            session.setAttribute("ownerEmail", owner.getEmail());
+            session.setAttribute("ownerMobile", owner.getMobile());
+        }
+
         return "payment";
     }
 

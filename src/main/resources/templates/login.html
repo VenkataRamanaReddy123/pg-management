@@ -226,7 +226,11 @@
 		</div>
 
 		<!-- ========================= LOGIN TITLE ========================= -->
-		<h2 id="loginTitle">Owner Login</h2>
+		<h2 id="loginTitle"
+    th:text="${ownerName != null ? ownerName : 'Owner Login'}">
+    Owner Login
+</h2>
+
 
 		<!-- ========================= ERROR MESSAGE ========================= -->
 		<div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
@@ -380,7 +384,6 @@
 		// ============================== LOAD AVATAR ==============================
 		window.addEventListener("load", () => {
 			// Display owner name from cookie
-			document.getElementById("loginTitle").innerText = getCookie("ownerName") || "Owner Login";
 
 			// Fetch avatar image from server
 			fetch(`/owner/avatar/image?t=${new Date().getTime()}`)

@@ -77,61 +77,69 @@
 
 <body>
 
-	<div class="payment-container">
+<div class="payment-container">
 
-		<div class="plan-title">Standard Plan</div>
-		<div class="plan-price">₹399 / Year</div>
+    <div class="plan-title">Standard Plan</div>
+    <div class="plan-price">₹399 / Year</div>
 
-		<p>Select a payment method:</p>
+    <p>Select a payment method:</p>
 
-		<!-- Razorpay Button -->
-		<button id="rzpButton" class="btn-payment btn-razorpay">
-			<img src="images/Rozopay.png">
-			Pay Securely (Razorpay UPI / Card / Wallet)
-		</button>
+    <!-- Razorpay Button -->
+    <button type="button" id="rzpButton" class="btn-payment btn-razorpay">
+        <img th:src="@{/images/Rozopay.png}">
+        Pay Securely (Razorpay UPI / Card / Wallet)
+    </button>
 
-	</div>
+</div>
 
-	<!-- Razorpay Script -->
-	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-	<script>
-		// Pre-fill data from Thymeleaf session variables
-		const ownerName = /*[[${session.ownerName}]]*/ 'Owner';
-		const ownerEmail = /*[[${session.ownerEmail}]]*/ 'owner@example.com';
-		const ownerMobile = /*[[${session.ownerMobile}]]*/ '9999999999';
+<!-- ✅ MUST be inline -->
+<script th:inline="javascript">
 
-		document.getElementById("rzpButton").onclick = function () {
-			fetch("/createOrder", { method: "POST" })
-				.then(res => res.json())
-				.then(data => {
+    const ownerName   = /*[[${session.ownerName}]]*/ "";
+    const ownerEmail  = /*[[${session.ownerEmail}]]*/ "";
+    const ownerMobile = /*[[${session.ownerMobile}]]*/ "";
 
-					let options = {
-						"key": data.razorpayKeyId,
-						"amount": data.amount,
-						"currency": "INR",
-						"name": "PG App Subscription",
-						"description": "Standard Yearly Plan",
-						"order_id": data.orderId,
+    document.getElementById("rzpButton").addEventListener("click", function () {
 
-						"prefill": {
-							"name": ownerName,
-							"email": ownerEmail,
-							"contact": ownerMobile
-						},
+        if (!ownerName || !ownerEmail || !ownerMobile) {
+            alert("Session expired. Please login again.");
+            window.location.href = "/login";
+            return;
+        }
 
-						"handler": function (response) {
-							window.location.href = "/payment/success";
-						},
+        fetch("/createOrder", { method: "POST" })
+            .then(res => res.json())
+            .then(data => {
 
-						"theme": { "color": "#4b0082" }
-					};
+                const options = {
+                    key: data.razorpayKeyId,
+                    amount: data.amount,
+                    currency: "INR",
+                    name: "PG App Subscription",
+                    description: "Standard Yearly Plan",
+                    order_id: data.orderId,
 
-					let rzp = new Razorpay(options);
-					rzp.open();
-				});
-		};
-	</script>
+                    prefill: {
+                        name: ownerName,
+                        email: ownerEmail,
+                        contact: ownerMobile
+                    },
+
+                    handler: function () {
+                        window.location.href = "/payment/success";
+                    },
+
+                    theme: { color: "#4b0082" }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+            });
+    });
+
+</script>
 
 </body>
 </html>

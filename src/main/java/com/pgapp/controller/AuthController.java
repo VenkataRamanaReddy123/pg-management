@@ -62,14 +62,31 @@ public class AuthController {
 	 * Displays login page. If user already logged in, shows their name on page.
 	 */
 	@GetMapping({ "/", "/login" })
-	public String showLoginPage(HttpSession session, Model model) {
-		Long ownerId = (Long) session.getAttribute("ownerId");
+	public String showLoginPage(
+	        HttpSession session,
+	        Model model,
+	        @CookieValue(value = "ownerId", required = false) String ownerIdCookie) {
 
-		if (ownerId != null) {
-			ownerRepo.findById(ownerId).ifPresent(owner -> model.addAttribute("ownerName", owner.getOwnerName()));
-		}
-		return "login";
+	    Long ownerId = (Long) session.getAttribute("ownerId");
+
+	    // ✅ If session missing, try cookie
+	    if (ownerId == null && ownerIdCookie != null) {
+	        try {
+	            ownerId = Long.parseLong(ownerIdCookie);
+	        } catch (NumberFormatException ignored) {}
+	    }
+
+	    // ✅ Load owner name
+	    if (ownerId != null) {
+	        ownerRepo.findById(ownerId)
+	                 .ifPresent(owner ->
+	                     model.addAttribute("ownerName", owner.getOwnerName())
+	                 );
+	    }
+
+	    return "login";
 	}
+
 
 	/**
 	 * Handles login form submission. - Accepts either email or mobile as login
@@ -156,21 +173,15 @@ public class AuthController {
 	// ✅ Helper method to set cookies
 	private void setCookies(Owner owner, HttpServletResponse response) {
 
-	    String safeOwnerName = URLEncoder.encode(
-	            owner.getOwnerName(), StandardCharsets.UTF_8);
-
-	    Cookie nameCookie = new Cookie("ownerName", safeOwnerName);
-	    nameCookie.setHttpOnly(false);
-	    nameCookie.setPath("/");
-	    nameCookie.setMaxAge(24 * 60 * 60);
-	    response.addCookie(nameCookie);
-
+	    // ✅ Store ONLY ownerId in cookie (safe, numeric, RFC compliant)
 	    Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
-	    idCookie.setHttpOnly(false);
+	    idCookie.setHttpOnly(false); // used by UI / JS if needed
 	    idCookie.setPath("/");
-	    idCookie.setMaxAge(24 * 60 * 60);
+	    idCookie.setMaxAge(24 * 60 * 60); // 1 day
 	    response.addCookie(idCookie);
+
 	}
+
 
 
 	// =====================================================================
@@ -194,28 +205,6 @@ public class AuthController {
 
 	    // 2️⃣ Clear session completely
 	    session.invalidate();
-
-	    // 3️⃣ Re-create cookies ONLY for login page display
-	    if (owner != null) {
-
-	        // ✅ Encode owner name to avoid spaces / invalid cookie characters
-	        String safeOwnerName = java.net.URLEncoder.encode(
-	                owner.getOwnerName(), java.nio.charset.StandardCharsets.UTF_8
-	        );
-
-	        Cookie nameCookie = new Cookie("ownerName", safeOwnerName);
-	        nameCookie.setHttpOnly(false);
-	        nameCookie.setPath("/");
-	        nameCookie.setMaxAge(24 * 60 * 60); // 1 day
-	        response.addCookie(nameCookie);
-
-	        Cookie idCookie = new Cookie("ownerId", String.valueOf(owner.getId()));
-	        idCookie.setHttpOnly(false);
-	        idCookie.setPath("/");
-	        idCookie.setMaxAge(24 * 60 * 60); // 1 day
-	        response.addCookie(idCookie);
-	    }
-
 	    // 4️⃣ Redirect back to login
 	    return "redirect:/login";
 	}
@@ -343,7 +332,10 @@ public class AuthController {
 		Long ownerId = (Long) session.getAttribute("ownerId");
 		if (ownerId == null)
 			return "redirect:/login";
-
+		// ✅ Fetch logged-in owner name from DB
+	    ownerRepo.findById(ownerId)
+	             .ifPresent(owner ->
+	                 model.addAttribute("ownerName", owner.getOwnerName()));
 		model.addAttribute("pgs", pgRepo.findByOwnerIdAndDeletedFalse(ownerId));
 		return "pg-list";
 	}
