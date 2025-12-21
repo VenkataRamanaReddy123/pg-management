@@ -202,7 +202,6 @@ body {
 }
 
 .upgrade-disabled {
-    pointer-events: none;   /* disables click */
     opacity: 0.6;           /* faded look */
     cursor: not-allowed;
 }
@@ -256,13 +255,15 @@ body {
 </a>
 
 <!-- ================= UPGRADE BUTTON ================= -->
-<a href="javascript:void(0)"
-   id="upgradeBtn"
-   th:if="${isTrial == false}"
-   th:classappend="${hasActiveSubscription} ? ' upgrade-disabled' : ''"
-   class="upgrade-btn">
-   Upgrade
-</a>
+<button type="button"
+        id="upgradeBtn"
+        th:if="${isTrial == false}"
+        th:classappend="${hasActiveSubscription} ? ' upgrade-disabled' : ''"
+        class="upgrade-btn">
+    Upgrade
+</button>
+
+
 
 <input type="hidden" id="hasActiveSubscription"
        th:value="${hasActiveSubscription}">
@@ -416,9 +417,14 @@ body {
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <script th:inline="javascript">
-/* ======== FILL EDIT MODAL WITH SELECTED PG DATA ======== */
+
+/* =====================================================
+   1. EDIT MODAL & INPUT HELPERS
+===================================================== */
+
+/* Fill Edit Modal */
 $('#editModal').on('show.bs.modal', function (event) {
-    var b = $(event.relatedTarget);    // Button that triggered modal
+    var b = $(event.relatedTarget);
     $('#pgId').val(b.data('id'));
     $('#pgName').val(b.data('pgname'));
     $('#pgAddress').val(b.data('address'));
@@ -426,12 +432,16 @@ $('#editModal').on('show.bs.modal', function (event) {
     $('#pgEmail').val(b.data('email'));
 });
 
-/* ======== ALLOW ONLY NUMBERS FOR MOBILE INPUTS ======== */
+/* Allow only numbers for mobile */
 $(document).on('input', 'input[name="mobile"], #pgMobile', function () {
     this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);
 });
 
-/* ======== DELETE CONFIRMATION POPUP ======== */
+
+/* =====================================================
+   2. DELETE CONFIRMATION
+===================================================== */
+
 $(document).on("click", ".delete-btn", function () {
     let id = $(this).data("id");
     let name = $(this).data("name");
@@ -442,231 +452,172 @@ $(document).on("click", ".delete-btn", function () {
         icon: "warning",
         showCancelButton: true,
         confirmButtonText: "Yes, Delete",
-        cancelButtonText: "Cancel",
-        confirmButtonColor: "#dc3545",
-        cancelButtonColor: "#6c757d"
+        cancelButtonText: "Cancel"
     }).then((res) => {
         if (res.isConfirmed) {
-            // redirect to delete controller by ID
             window.location.href = "/pgs/delete?id=" + id;
         }
     });
 });
 
-/* ======== SUCCESS / INFO POPUPS FROM SERVER-SIDE FLASH ATTRIBUTES ======== */
-var deleted = /*[[${deleted}]]*/ null;
-var added = /*[[${added}]]*/ null;
-var edited = /*[[${edited}]]*/ null;
 
-/* legacy query param fallback */
-var urlParams = new URLSearchParams(window.location.search);
-var successParam = urlParams.get('success');
+/* =====================================================
+   3. SUCCESS POPUPS (ADD / EDIT / DELETE)
+===================================================== */
+
+var deleted = /*[[${deleted}]]*/ null;
+var added   = /*[[${added}]]*/ null;
+var edited  = /*[[${edited}]]*/ null;
 
 if (deleted) {
-    Swal.fire({ icon: 'success', title: 'Deleted!', html: '<b>' + deleted + '</b> deleted successfully!', width: 380, timer: 1400, showConfirmButton: false });
-} else if (added) {
-    Swal.fire({ icon: 'success', title: 'Added!', html: '<b>' + added + '</b> added successfully!', width: 380, timer: 1400, showConfirmButton: false });
-} else if (edited) {
-    Swal.fire({ icon: 'success', title: 'Updated!', html: '<b>' + edited + '</b> details updated successfully!', width: 380, timer: 1400, showConfirmButton: false });
-} else if (successParam === 'add' || successParam === 'edit') {
-
-    let title = successParam === 'add' ? 'Added!' : 'Updated!';
-    let message = successParam === 'add'
-        ? 'New PG added successfully!'
-        : 'PG details updated successfully!';
-
-    Swal.fire({
-        icon: 'success',
-        title: title,
-        text: message,
-        width: 380,
-        timer: 1200,
-        showConfirmButton: false
-    }).then(() => {
-        // 🔥 Remove success=edit/add so popup doesn't show on refresh
-        urlParams.delete('success');
-        window.history.replaceState({}, '', window.location.pathname + '?' + urlParams.toString());
-    });
+    Swal.fire({ icon: 'success', title: 'Deleted!', html: '<b>' + deleted + '</b> deleted successfully!', timer: 1400, showConfirmButton: false });
+}
+else if (added) {
+    Swal.fire({ icon: 'success', title: 'Added!', html: '<b>' + added + '</b> added successfully!', timer: 1400, showConfirmButton: false });
+}
+else if (edited) {
+    Swal.fire({ icon: 'success', title: 'Updated!', html: '<b>' + edited + '</b> updated successfully!', timer: 1400, showConfirmButton: false });
 }
 
-
-/* ======== RESTORE POPUP IF PG RESTORED (URL PARAM) ======== */
-document.addEventListener("DOMContentLoaded", function() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('restored')) {
-        Swal.fire({
-            icon: "success",
-            title: "PG Restored!",
-            html: "<b>" + params.get('restored') + "</b> has been successfully restored.",
-            width: 380,
-            minHeight: 140,
-            borderRadius: 12,
-            confirmButtonColor: "#28a745",
-            customClass: {
-                title: 'swal2-title',
-                htmlContainer: 'swal2-html-container',
-                confirmButton: 'swal2-confirm'
-            }
-        }).then(() => {
-            window.location.replace("/pgs/list"); // clean URL
-        });
-    }
-});
+/* =====================================================
+   3B. SUCCESS POPUPS FROM URL PARAMS (FIX)
+===================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    // Thymeleaf-inserted values (may be boolean, null, or string)
-    var trialExpired = /*[[${trialExpired}]]*/ false;
-    var subscriptionExpired = /*[[${subscriptionExpired}]]*/ false;
+    const params = new URLSearchParams(window.location.search);
 
-    // Normalize to real boolean (handles true, "true", "false", null, 0/1)
-    function toBool(v) {
-        if (v === true || v === 1) return true;
-        if (v === false || v === 0 || v === null || typeof v === 'undefined') return false;
-        var s = String(v).trim().toLowerCase();
-        return (s === 'true' || s === '1');
+    /* ---------- ADD / EDIT ---------- */
+    const success = params.get("success");
+    if (success === "add" || success === "edit") {
+
+        Swal.fire({
+            icon: "success",
+            title: success === "add" ? "Added!" : "Updated!",
+            text: success === "add"
+                ? "New PG added successfully!"
+                : "PG details updated successfully!",
+            timer: 1400,
+            showConfirmButton: false
+        }).then(() => {
+            params.delete("success");
+            window.history.replaceState({}, "", window.location.pathname);
+        });
+
+        return;
     }
 
-    trialExpired = toBool(trialExpired);
+    /* ---------- RESTORE ---------- */
+    const restored = params.get("restored");
+    if (restored) {
+
+        Swal.fire({
+            icon: "success",
+            title: "PG Restored!",
+            html: "<b>" + restored + "</b> has been restored successfully!",
+            confirmButtonText: "OK"
+        }).then(() => {
+            params.delete("restored");
+            window.history.replaceState({}, "", window.location.pathname);
+        });
+    }
+});
+/* =====================================================
+   4. SUBSCRIPTION / TRIAL / UPGRADE LOGIC
+===================================================== */
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    /* ---------- Thymeleaf values ---------- */
+    var trialExpired        = /*[[${trialExpired}]]*/ false;
+    var subscriptionExpired = /*[[${subscriptionExpired}]]*/ false;
+
+    function toBool(v) {
+        return v === true || String(v).toLowerCase() === "true";
+    }
+
+    trialExpired        = toBool(trialExpired);
     subscriptionExpired = toBool(subscriptionExpired);
 
-    // nothing to intercept if not expired
+    /* =================================================
+       4A. UPGRADE BUTTON (ALWAYS ACTIVE)
+    ================================================= */
+
+    const upgradeBtn = document.getElementById("upgradeBtn");
+    const hasActiveSubscription =
+        document.getElementById("hasActiveSubscription")?.value === "true";
+
+    if (upgradeBtn) {
+        upgradeBtn.addEventListener("click", function () {
+
+            // ✅ ACTIVE SUBSCRIPTION → POPUP
+            if (hasActiveSubscription && !subscriptionExpired) {
+                Swal.fire({
+                    icon: "info",
+                    title: "Active Subscription",
+                    html: "You already have a valid subscription.<br><b>Upgrade available after expiry.</b>",
+                    confirmButtonText: "OK"
+                });
+                return;
+            }
+
+            // ✅ EXPIRED / NO SUBSCRIPTION → REDIRECT
+            window.location.href = "/subscribe";
+        });
+    }
+
+    /* =================================================
+       4B. IF NOT EXPIRED → STOP HERE
+    ================================================= */
     if (!(trialExpired || subscriptionExpired)) return;
 
+    /* =================================================
+       4C. EXPIRED POPUP
+    ================================================= */
+
     function showExpiredPopup() {
-        return Swal.fire({
+        Swal.fire({
             icon: "info",
             title: trialExpired ? "Trial Expired!" : "Subscription Expired!",
             html: "Your trial/subscription has ended.<br>Please <b>subscribe</b> to continue.",
             showCancelButton: true,
-            confirmButtonText: "Subscribe Now",
-            cancelButtonText: "Cancel",
-            confirmButtonColor: "#2575fc"
-        }).then((result) => {
-            if (result.isConfirmed) {
+            confirmButtonText: "Subscribe Now"
+        }).then(r => {
+            if (r.isConfirmed) {
                 window.location.href = "/subscribe";
             }
         });
     }
 
-    // Helper: decide whether a link href is allowed to proceed (subscribe/logout/mailto/tel/#/javascript)
-    function isAllowedHref(href) {
-        if (!href) return false;
-        var low = href.toLowerCase();
-        if (low.indexOf("/subscribe") !== -1) return true;
-        if (low.indexOf("/logout") !== -1) return true;
-        if (low.startsWith("mailto:") || low.startsWith("tel:")) return true;
-        if (low.startsWith("#") || low.startsWith("javascript:")) return true;
-        return false;
-    }
+    /* =================================================
+       4D. BLOCK EDIT / DELETE WHEN EXPIRED
+    ================================================= */
 
-    // ========= Intercept clicks on .btn-edit and .delete-btn using capture so we can stop other handlers =========
-    function attachCaptureInterceptor(selector, handlerFn) {
-        // attach at document level in capture to catch delegated clicks before jQuery bubble handlers
-        document.addEventListener("click", function captureListener(e) {
-            // find closest matching target
-            var el = e.target;
-            while (el && el !== document) {
-                if (el.matches && el.matches(selector)) {
-                    // stop other handlers from running
-                    e.stopImmediatePropagation && e.stopImmediatePropagation();
-                    e.preventDefault();
-                    handlerFn.call(el, e);
-                    return;
-                }
-                el = el.parentNode;
-            }
-        }, true); // <-- capture = true
-    }
+    document.addEventListener("click", function (e) {
+        let btn = e.target.closest(".btn-edit, .delete-btn");
+        if (!btn) return;
 
-    // Intercept edit buttons: show expired popup instead of opening modal
-    attachCaptureInterceptor(".btn-edit", function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
         showExpiredPopup();
-    });
+    }, true);
 
-    // Intercept delete buttons: show expired popup instead of delete confirm/redirect
-    attachCaptureInterceptor(".delete-btn", function(e){
-        showExpiredPopup();
-    });
+    /* =================================================
+       4E. BLOCK ADD / EDIT FORM SUBMIT
+    ================================================= */
 
-    // Intercept form submissions (Add / Edit) — block and show popup
-    document.addEventListener("submit", function captureFormSubmit(e){
-        var form = e.target;
-        // allow forms that explicitly go to subscribe or logout
-        var action = form.getAttribute("action") || "";
-        if (isAllowedHref(action)) return; // allow subscribe/logout forms
-        // If the form is inside the PG add/edit area, intercept
-        if (form.closest(".pg-form") || form.id === "editPgForm") {
-            e.stopImmediatePropagation && e.stopImmediatePropagation();
+    document.addEventListener("submit", function (e) {
+        if (e.target.closest(".pg-form") || e.target.id === "editPgForm") {
             e.preventDefault();
+            e.stopImmediatePropagation();
             showExpiredPopup();
         }
-    }, true); // capture
+    }, true);
 
-    // Intercept anchor clicks generally, but allow approved hrefs
-    document.addEventListener("click", function captureAnchorClicks(e) {
-        var link = e.target;
-        while (link && link !== document) {
-            if (link.tagName && link.tagName.toLowerCase() === 'a') {
-                var href = link.getAttribute("href");
-                if (isAllowedHref(href)) {
-                    return; // allow navigation
-                }
-                // else block navigation and show popup
-                e.stopImmediatePropagation && e.stopImmediatePropagation();
-                e.preventDefault();
-                showExpiredPopup();
-                return;
-            }
-            link = link.parentNode;
-        }
-    }, true); // capture
-
-});
-
-// Intercept anchor clicks generally, but allow approved hrefs
-document.addEventListener("DOMContentLoaded", function () {
-
-    const isActiveSub = document.getElementById("hasActiveSubscription").value === "true";
-
-    const upgradeBtn = document.getElementById("upgradeBtn");
-
-    if (!upgradeBtn) return;
-
-    upgradeBtn.addEventListener("click", function (e) {
-
-        if (isActiveSub) {
-            e.preventDefault();
-
-            Swal.fire({
-                icon: "info",
-                title: "Already Active",
-                text: "You already have an active subscription.",
-                confirmButtonText: "OK"
-            });
-
-            return;
-        }
-
-        // else normal redirect to subscription page
-        window.location.href = "/subscribe";
-    });
-
-});
-
-document.getElementById("upgradeBtn")?.addEventListener("click", function (e) {
-    if (this.classList.contains("upgrade-disabled")) {
-        e.preventDefault();
-        Swal.fire({
-            icon: "info",
-            title: "Active Subscription",
-            text: "You already have a valid subscription.",
-            confirmButtonText: "OK"
-        });
-    }
 });
 
 </script>
+
 
 </body>
 </html>

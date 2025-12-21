@@ -97,6 +97,14 @@ public class PgController {
      model.addAttribute("trialExpired", trialExpired);
      model.addAttribute("subscriptionExpired", subscriptionExpired);
      model.addAttribute("isTrial", isTrial);
+     boolean hasActiveSubscription = false;
+
+  // subscription exists AND not expired
+  if (owner.getSubscriptionEnd() != null && !subscriptionExpired) {
+      hasActiveSubscription = true;
+  }
+
+  model.addAttribute("hasActiveSubscription", hasActiveSubscription);
 
 
         // ============================
