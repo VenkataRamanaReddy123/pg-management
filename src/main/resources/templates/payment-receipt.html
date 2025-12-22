@@ -142,7 +142,7 @@
         <div class="section-title">Payment Details</div>
 
         <!-- ==================== PAID STAMP (Float Right) ==================== -->
-        <div th:if="${paymentStatus.equalsIgnoreCase('Paid')}"
+        <div th:if="${paymentStatus.equalsIgnoreCase('PAID')}"
             style="float: right; margin-top: -20px; margin-right: 40px;">
             <img th:src="@{'classpath:/static/images/paid_stamp.png'}" style="width: 180px; opacity:0.35;" />
         </div>

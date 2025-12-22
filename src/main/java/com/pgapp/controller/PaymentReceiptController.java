@@ -72,7 +72,27 @@ public class PaymentReceiptController {
                 redirectAttrs.addAttribute("receiptSent", "false");
                 return redirect(pgId, month, year, roomNo);
             }
+         // ==================================================
+         // 🛡️ FIRST-TIME PAID SAFETY FIX (DO NOT REMOVE)
+         // ==================================================
+         if (payment.getPaymentDate() == null) {
+             payment.setPaymentDate(LocalDate.now());
+         }
 
+         if (payment.getTransactionId() == null || payment.getTransactionId().isBlank()) {
+             payment.setTransactionId(
+                 payment.getPaymentMethod() == PaymentMethod.CASH
+                     ? "CASH-" + System.currentTimeMillis()
+                     : "TXN-" + System.currentTimeMillis()
+             );
+         }
+
+         if (payment.getReceiptId() == null || payment.getReceiptId().isBlank()) {
+             payment.setReceiptId("RCPT-" + System.currentTimeMillis());
+         }
+
+         // 🔒 Persist ONCE before email
+         paymentRepo.save(payment);
             // --------------------------------------------------
             // 3️⃣ Joining date safety check
             // --------------------------------------------------
