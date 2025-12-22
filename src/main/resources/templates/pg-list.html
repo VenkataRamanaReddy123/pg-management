@@ -462,7 +462,7 @@ $(document).on("click", ".delete-btn", function () {
 
 
 /* =====================================================
-   3. SUCCESS POPUPS (ADD / EDIT / DELETE)
+   3. SUCCESS POPUPS (FLASH ATTRIBUTES)
 ===================================================== */
 
 var deleted = /*[[${deleted}]]*/ null;
@@ -479,15 +479,15 @@ else if (edited) {
     Swal.fire({ icon: 'success', title: 'Updated!', html: '<b>' + edited + '</b> updated successfully!', timer: 1400, showConfirmButton: false });
 }
 
+
 /* =====================================================
-   3B. SUCCESS POPUPS FROM URL PARAMS (FIX)
+   3B. SUCCESS POPUPS FROM URL PARAMS
 ===================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
 
     const params = new URLSearchParams(window.location.search);
 
-    /* ---------- ADD / EDIT ---------- */
     const success = params.get("success");
     if (success === "add" || success === "edit") {
 
@@ -503,14 +503,11 @@ document.addEventListener("DOMContentLoaded", function () {
             params.delete("success");
             window.history.replaceState({}, "", window.location.pathname);
         });
-
         return;
     }
 
-    /* ---------- RESTORE ---------- */
     const restored = params.get("restored");
     if (restored) {
-
         Swal.fire({
             icon: "success",
             title: "PG Restored!",
@@ -522,13 +519,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 });
+
+
 /* =====================================================
-   4. SUBSCRIPTION / TRIAL / UPGRADE LOGIC
+   4. SUBSCRIPTION / TRIAL / GLOBAL ACCESS BLOCK
 ===================================================== */
 
 document.addEventListener("DOMContentLoaded", function () {
 
-    /* ---------- Thymeleaf values ---------- */
+    /* ---------- Thymeleaf flags ---------- */
     var trialExpired        = /*[[${trialExpired}]]*/ false;
     var subscriptionExpired = /*[[${subscriptionExpired}]]*/ false;
 
@@ -539,10 +538,7 @@ document.addEventListener("DOMContentLoaded", function () {
     trialExpired        = toBool(trialExpired);
     subscriptionExpired = toBool(subscriptionExpired);
 
-    /* =================================================
-       4A. UPGRADE BUTTON (ALWAYS ACTIVE)
-    ================================================= */
-
+    /* ---------- Upgrade Button ---------- */
     const upgradeBtn = document.getElementById("upgradeBtn");
     const hasActiveSubscription =
         document.getElementById("hasActiveSubscription")?.value === "true";
@@ -550,7 +546,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (upgradeBtn) {
         upgradeBtn.addEventListener("click", function () {
 
-            // ✅ ACTIVE SUBSCRIPTION → POPUP
             if (hasActiveSubscription && !subscriptionExpired) {
                 Swal.fire({
                     icon: "info",
@@ -561,20 +556,14 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // ✅ EXPIRED / NO SUBSCRIPTION → REDIRECT
             window.location.href = "/subscribe";
         });
     }
 
-    /* =================================================
-       4B. IF NOT EXPIRED → STOP HERE
-    ================================================= */
+    /* ---------- NOT EXPIRED → ALLOW ALL ---------- */
     if (!(trialExpired || subscriptionExpired)) return;
 
-    /* =================================================
-       4C. EXPIRED POPUP
-    ================================================= */
-
+    /* ---------- Expired Popup ---------- */
     function showExpiredPopup() {
         Swal.fire({
             icon: "info",
@@ -589,34 +578,72 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* =================================================
-       4D. BLOCK EDIT / DELETE WHEN EXPIRED
-    ================================================= */
+    function isAllowed(href) {
+        if (!href) return false;
+        href = href.toLowerCase();
 
-    document.addEventListener("click", function (e) {
-        let btn = e.target.closest(".btn-edit, .delete-btn");
-        if (!btn) return;
+        return (
+            href.includes("/subscribe") ||
+            href.includes("/logout") ||
+            href.startsWith("#") ||
+            href.startsWith("javascript:") ||
+            href.startsWith("mailto:") ||
+            href.startsWith("tel:")
+        );
+    }
+
+    /* =================================================
+       🔒 GLOBAL CLICK BLOCK (ONE PLACE)
+    ================================================= */
+ document.addEventListener("click", function (e) {
+
+    /* ✅ Allow SweetAlert interactions */
+    if (e.target.closest(".swal2-popup") || e.target.closest(".swal2-container")) return;
+
+    /* ✅ Allow Bootstrap modal interactions */
+    if (e.target.closest(".modal")) return;
+
+    /* ✅ Allow logout button click */
+    if (e.target.closest('form[action*="/logout"]')) return;
+    
+      /* ✅ Allow Upgrade button to redirect directly */
+    if (e.target.closest("#upgradeBtn")) return;
+
+
+    const el = e.target.closest("a, button");
+    if (!el) return;
+
+    const href = el.getAttribute("href");
+
+    /* ✅ Allow safe links */
+    if (isAllowed(href)) return;
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showExpiredPopup();
+
+}, true);
+
+
+
+    /* =================================================
+       🔒 GLOBAL FORM SUBMIT BLOCK
+    ================================================= */
+    document.addEventListener("submit", function (e) {
+
+        const action = e.target.getAttribute("action");
+
+        if (isAllowed(action)) return;
 
         e.preventDefault();
         e.stopImmediatePropagation();
         showExpiredPopup();
-    }, true);
 
-    /* =================================================
-       4E. BLOCK ADD / EDIT FORM SUBMIT
-    ================================================= */
-
-    document.addEventListener("submit", function (e) {
-        if (e.target.closest(".pg-form") || e.target.id === "editPgForm") {
-            e.preventDefault();
-            e.stopImmediatePropagation();
-            showExpiredPopup();
-        }
     }, true);
 
 });
-
 </script>
+
 
 
 </body>
