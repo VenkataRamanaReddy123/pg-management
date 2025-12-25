@@ -113,7 +113,8 @@ public class PgController {
         Long remainingDays = null;
 
         if (endDate != null) {
-            remainingDays = ChronoUnit.DAYS.between(today, endDate);
+        	// inclusive calculation – today is still usable
+        	remainingDays = ChronoUnit.DAYS.between(today, endDate.plusDays(1));
             if (remainingDays < 0) remainingDays = 0L;
 
             // Format DD-MM-YYYY
@@ -123,7 +124,6 @@ public class PgController {
 
         model.addAttribute("remainingDays", remainingDays);
         model.addAttribute("subscriptionPlan", owner.getSubscriptionPlan());
-
         return "pg-list";
     }
 

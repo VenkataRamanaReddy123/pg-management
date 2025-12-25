@@ -93,21 +93,7 @@ public class PaymentReceiptController {
 
          // 🔒 Persist ONCE before email
          paymentRepo.save(payment);
-            // --------------------------------------------------
-            // 3️⃣ Joining date safety check
-            // --------------------------------------------------
-            if (candidate.getJoiningDate() != null) {
-                LocalDate joinDate = candidate.getJoiningDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();
-
-                LocalDate firstOfMonth = LocalDate.of(year, month, 1);
-                if (joinDate.isAfter(firstOfMonth)) {
-                    redirectAttrs.addAttribute("receiptSent", "false");
-                    return redirect(pgId, month, year, roomNo);
-                }
-            }
+       
 
             // --------------------------------------------------
             // 4️⃣ Extract values ONLY from DB

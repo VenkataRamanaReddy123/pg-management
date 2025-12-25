@@ -64,13 +64,17 @@ public class EmailService {
     // =====================================================
     public void sendOtpEmail(String toEmail, String otp, String purpose) {
 
-        String subject = purpose + " OTP – PG App";
+        String subject = purpose + " OTP – Nivora PG App";
         String body =
                 "Hello,\n\n"
               + "Your OTP for " + purpose + " is:\n\n"
               + otp + "\n\n"
               + "Do not share this OTP with anyone.\n\n"
-              + "Thanks,\nPG App Team";
+              + "Best Regards,\n"
+              + "Nivora Team\n"
+              + "PG & Hostel Management Platform\n"
+              + "https://nivora.work/";
+
 
         sendEmail(toEmail, subject, body);
     }
@@ -91,7 +95,7 @@ public class EmailService {
 
         String body =
                 "Hello " + ownerName + ",\n\n"
-              + "Your PG has been registered successfully.\n\n"
+              + "Your PG has been Registered Successfully.\n\n"
               + "PG Name: " + pgName + "\n"
               + "PG Address: " + pgAddress + "\n"
               + "Mobile: " + mobile + "\n"
@@ -104,7 +108,7 @@ public class EmailService {
             body += "MPIN: " + maskMpin(mpin) + "\n";
         }
 
-        body += "\nThanks,\nPG App Team";
+        body += "\n\nBest Regards,\nNivora Team\nPG & Hostel Management Platform\nhttps://nivora.work/";
 
         sendEmail(toEmail, subject, body);
     }
@@ -118,7 +122,7 @@ public class EmailService {
             String password,
             String mpin) {
 
-        String subject = "Credentials Updated – PG App";
+        String subject = "Credentials Updated – Nivora PG App";
 
         String body =
                 "Hello " + ownerName + ",\n\n"
@@ -132,8 +136,12 @@ public class EmailService {
         }
 
         body +=
-                "\nIf this was not you, please reset your credentials immediately.\n\n"
-              + "Thanks,\nPG App Team";
+        	    "\nIf this was not you, please reset your credentials immediately.\n\n"
+        	  + "Best Regards,\n"
+        	  + "Nivora Team\n"
+        	  + "PG & Hostel Management Platform\n"
+        	  + "https://nivora.work/";
+
 
         sendEmail(toEmail, subject, body);
     }

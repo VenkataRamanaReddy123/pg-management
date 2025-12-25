@@ -681,20 +681,35 @@
 						<div class="summary-bar single-line-summary">
 
 							<div class="summary-inline">
-								<span class="summary-item total"><i class="fas fa-users"></i>Total:<span
+								<span class="summary-item total"><i class="fas fa-users"></i>Total&nbsp;:&nbsp;<span
 										th:text="${totalCandidates}">0</span></span>|
-								<span class="summary-item paid"><i class="fas fa-check-circle"></i>Paid:<span
+								<span class="summary-item paid"><i class="fas fa-check-circle"></i>Paid&nbsp;:&nbsp;<span
 										th:text="${paidCandidates}">0</span></span>|
-								<span class="summary-item partial"><i class="fas fa-adjust"></i>Partial:<span
+								<span class="summary-item partial"><i class="fas fa-adjust"></i>Partial&nbsp;:&nbsp;<span
 										th:text="${partialCandidates}">0</span></span>|
-								<span class="summary-item pending"><i class="fas fa-hourglass-half"></i>Pending:<span
-										th:text="${pendingCandidates}">0</span></span>&nbsp;&nbsp;
-								<span class="summary-item advance"><i class="fas fa-hand-holding-usd"></i>Advance:₹<span
-										th:text="${totalAdvanceAmount}">0</span></span>|
-								<span class="summary-item collection"><i class="fas fa-coins"></i>Collection:₹<span
-										th:text="${totalPaidAmount}">0</span></span>|
-								<span class="summary-item balance"><i class="fas fa-wallet"></i>Balance:₹<span
-										th:text="${totalBalanceAmount}">0</span></span>
+								<span class="summary-item pending">
+									<i class="fas fa-hourglass-half"></i>
+									Pending&nbsp;:&nbsp;<span th:text="${pendingCandidates}">0</span>
+								</span>&nbsp;&nbsp;
+
+								<span class="summary-item advance">
+									<i class="fas fa-hand-holding-usd"></i>
+									Advance&nbsp;:&nbsp;<span
+										th:text="${T(java.lang.Math).round(totalAdvanceAmount)}">0</span>
+								</span> |
+
+								<span class="summary-item collection">
+									<i class="fas fa-coins"></i>
+									Collection&nbsp;:&nbsp;<span
+										th:text="${T(java.lang.Math).round(totalPaidAmount)}">0</span>
+								</span> |
+
+								<span class="summary-item balance">
+									<i class="fas fa-wallet"></i>
+									Balance&nbsp;:&nbsp;<span
+										th:text="${T(java.lang.Math).round(totalBalanceAmount)}">0</span>
+								</span>
+
 							</div>
 
 
@@ -751,20 +766,23 @@
 
 							<!-- Advance -->
 							<td class="text-center">
-								<input type="text" class="form-control form-control-sm visible-advance"
-									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].advance : ''}" />
+								<input type="text" class="form-control form-control-sm visible-advance" th:value="${paymentMap[candidate.candidateId] != null 
+               ? T(java.lang.Math).round(paymentMap[candidate.candidateId].advance) 
+               : 0}" />
 							</td>
 
 							<!-- Amount Paid -->
 							<td class="text-center">
-								<input type="text" class="form-control form-control-sm visible-amountPaid"
-									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].amountPaid : ''}" />
+								<input type="text" class="form-control form-control-sm visible-amountPaid" th:value="${paymentMap[candidate.candidateId] != null 
+               ? T(java.lang.Math).round(paymentMap[candidate.candidateId].amountPaid) 
+               : 0}" />
 							</td>
 
 							<!-- Balance -->
 							<td class="text-center">
-								<input type="text" class="form-control form-control-sm visible-balance"
-									th:value="${paymentMap[candidate.candidateId] != null ? paymentMap[candidate.candidateId].balance :''}" />
+								<input type="text" class="form-control form-control-sm visible-balance" th:value="${paymentMap[candidate.candidateId] != null 
+               ? T(java.lang.Math).round(paymentMap[candidate.candidateId].balance) 
+               : 0}" />
 							</td>
 
 							<!-- Transaction ID -->
@@ -827,25 +845,23 @@
 							</td>
 
 							<!-- Email Receipt -->
-<td class="text-center">
-    <form th:action="@{/payments/send-receipt}" method="post" class="email-receipt-form"
-          style="margin:0;">
-        
-        <input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
-        <input type="hidden" name="pgId" th:value="${selectedPg.id}" />
-        <input type="hidden" name="month" th:value="${selectedMonth}" />
-        <input type="hidden" name="year" th:value="${selectedYear}" />
-        <input type="hidden" name="roomNo" th:value="${roomNo}" />
+							<td class="text-center">
+								<form th:action="@{/payments/send-receipt}" method="post" class="email-receipt-form"
+									style="margin:0;">
 
-        <button type="submit"
-                class="btn btn-sm btn-success send-receipt-btn"
-                th:disabled="${paymentMap[candidate.candidateId] == null
+									<input type="hidden" name="candidateId" th:value="${candidate.candidateId}" />
+									<input type="hidden" name="pgId" th:value="${selectedPg.id}" />
+									<input type="hidden" name="month" th:value="${selectedMonth}" />
+									<input type="hidden" name="year" th:value="${selectedYear}" />
+									<input type="hidden" name="roomNo" th:value="${roomNo}" />
+
+									<button type="submit" class="btn btn-sm btn-success send-receipt-btn" th:disabled="${paymentMap[candidate.candidateId] == null
                   || paymentMap[candidate.candidateId].status.name()
                   != T(com.pgapp.model.PaymentStatus).PAID.name()}">
-            <i class="fas fa-envelope"></i> Receipt
-        </button>
-    </form>
-</td>
+										<i class="fas fa-envelope"></i> Receipt
+									</button>
+								</form>
+							</td>
 
 
 						</tr>
@@ -1103,7 +1119,7 @@
 			if (v === null || v === undefined) return 0.0;
 			v = v.toString().trim();
 			if (v === "" || isNaN(v)) return 0.0;
-			return parseFloat(v);
+			return Math.round(parseFloat(v));
 		}
 
 		// ======================================================
@@ -1144,9 +1160,9 @@
 			window.history.replaceState({}, document.title, url.toString());
 		}
 
-	function filterRoom() {
-    document.querySelector(".search-bar-row").submit();
-}
+		function filterRoom() {
+			document.querySelector(".search-bar-row").submit();
+		}
 
 	</script>
 

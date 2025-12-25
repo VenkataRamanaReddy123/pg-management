@@ -150,9 +150,14 @@ public class SubscriptionController {
 
                 helper.setTo(owner.getEmail());
                 helper.setSubject("PG Subscription Confirmation");
-                helper.setText("Dear " + owner.getOwnerName() + ",\n\n"
-                        + "Thank you for subscribing! Please find the subscription details attached.\n\n"
-                        + "Best regards,\nPG App Team");
+                helper.setText(
+                        "Dear " + owner.getOwnerName() + ",\n\n"
+                      + "Thank you for subscribing! Please find the subscription details attached.\n\n"
+                      + "Best Regards,\n"
+                      + "Nivora Team\n"
+                      + "PG & Hostel Management Platform\n"
+                      + "https://nivora.work/"
+                );
 
                 if (owner.getPgs() != null && !owner.getPgs().isEmpty()) {
                     for (Pg pg : owner.getPgs()) {
