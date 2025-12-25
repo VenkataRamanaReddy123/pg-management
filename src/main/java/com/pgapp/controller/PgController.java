@@ -154,7 +154,11 @@ public class PgController {
 
         // 🔹 Save new or updated PG
         pgRepo.save(pg);
-
+        // ⭐ FIX — sync updated PG email to OWNER table
+        if (pg.getEmail() != null && !pg.getEmail().equals(owner.getEmail())) {
+            owner.setEmail(pg.getEmail());
+            ownerRepo.save(owner);
+        }
         // 🔹 Redirect to list page with success message flag
         return "redirect:/pgs/list?success=" + (isEdit ? "edit" : "add");
     }
